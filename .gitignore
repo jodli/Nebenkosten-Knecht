@@ -1,0 +1,7 @@
+frontend/node_modules
+backend/target
+frontend/build
+frontend/package-lock.json
+backend/Cargo.lock
+*.json
+backend/config.toml
