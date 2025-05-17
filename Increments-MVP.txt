@@ -1,0 +1,87 @@
+Proposed Development Increments for Nebenkosten-Knecht MVP
+
+Development Increment 1: Foundational Setup (Approx. 6 weeks)
+
+Goal: Establish the basic data entities. The user should be able to set up the static information about their properties, tenants, and meters.
+
+Features to Implement:
+
+M1: Property Unit Management: Create, view, edit, delete property units (name, living area m²).
+
+M2: Basic Tenant Management: Create, view, edit, delete tenants and assign them to a property unit (name, number of persons).
+
+M3: Meter Management: Create, view, edit, delete meters (type, unit, assignment to unit/common).
+
+Usable Outcome at End of Increment 1:
+
+The user can successfully define their properties, the tenants residing in them, and all relevant utility meters.
+
+This data is persistently stored and can be reviewed and managed.
+
+This forms the backbone for all subsequent data entry and calculations.
+
+Development Increment 2: Meter Data Entry & Consumption Tracking (Approx. 6 weeks)
+
+Goal: Enable the user to input real-world utility usage data and see basic consumption.
+
+Features to Implement (building on Increment 1):
+
+M4: Manual Meter Reading Entry: Input meter readings with date and value for each defined meter.
+
+M5: View Meter Reading History: List/view all recorded readings for a selected meter, ordered by date.
+
+M6: Basic Consumption Calculation: For a selected meter and period (or between two readings), display the calculated consumption.
+
+Usable Outcome at End of Increment 2:
+
+The user can regularly enter new meter readings.
+
+They can review the history of readings for any meter to check for errors or track usage.
+
+The system can show basic consumption (e.g., "this month's electricity usage for meter X is Y kWh").
+
+Development Increment 3: Financial Framework & Cost Allocation Rules (Approx. 6 weeks)
+
+Goal: Allow the user to define all associated costs and the rules for how these costs should be distributed among tenants/units.
+
+Features to Implement (building on Increment 1 & 2):
+
+M7: Cost Type & Tariff Management: Define various cost types, input prices/tariffs for consumption-based costs, and total amounts for fixed costs.
+
+M8: Allocation Key Definition: Define the different methods for distributing costs (by area, persons, consumption, etc.).
+
+M9: Assign Allocation Keys to Cost Types: Link each defined cost type to its appropriate allocation key.
+
+Usable Outcome at End of Increment 3:
+
+The user has a complete setup of all financial aspects: what the costs are, how much they are, and the logic (rules) for how they will be divided.
+
+This prepares the system for the final calculation step.
+
+Development Increment 4: Annual Statement Generation (Approx. 6 weeks)
+
+Goal: Implement the core calculation logic and generate the final Nebenkostenabrechnung. This is the culmination of all previous increments.
+
+Features to Implement (building on all previous increments):
+
+M10: Define Billing Period: Allow the user to specify the start and end date for the annual statement they want to generate.
+
+M11: Core Billing Logic: The system calculates total costs per cost type and distributes them to units/tenants based on all defined data (readings, consumptions, tariffs, allocation keys, unit/tenant data) for the specified billing period.
+
+M12: Simple Billing Report Generation: Generate a clear, printable HTML report for a selected tenant, detailing their share of all applicable costs for the billing period.
+
+Usable Outcome at End of Increment 4 (MVP Complete):
+
+The user can select a tenant and a billing period.
+
+The system performs all necessary calculations and produces a complete Nebenkostenabrechnung that can be printed and given to the tenant.
+
+The primary goal of the MVP is achieved.
+
+Notes on this approach:
+
+Flexibility: While this provides a structure, the exact features within each increment can be slightly adjusted based on development realities.
+
+Testing: Each increment provides a testable part of the application. You can use the app yourself at the end of each ~6-week period to validate the functionality.
+
+Focus: This ensures that the most fundamental pieces are built first, and complexity is added layer by layer.

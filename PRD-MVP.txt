@@ -1,0 +1,104 @@
+Part 1: Product Requirements Document (PRD) - MVP
+
+1. Introduction & Goals
+
+Product Name: Nebenkosten-Knecht
+
+Purpose: Nebenkosten-Knecht aims to solve the cumbersome, error-prone, and time-consuming manual process of tracking monthly utility meter readings, calculating consumption, consolidating these with other annual shared costs, and generating an accurate annual utility cost statement (Nebenkostenabrechnung) for landlords and their tenants. It replaces inefficient spreadsheet-based methods, which lack automation, detailed analysis, and streamlined report generation.
+
+MVP Goals:
+
+Enable users to easily record their monthly utility meter readings, input other relevant annual shared costs, and automatically generate a basic, printable annual cost statement (Nebenkostenabrechnung) that clearly outlines the shared costs for themselves and their tenants.
+
+Successfully complete the core task of generating an accurate Nebenkostenabrechnung for at least one property and tenant.
+
+Demonstrate clear time savings and/or improved satisfaction compared to the user's previous manual methods.
+
+2. Target Audience
+
+Homeowners with an annexed apartment (Einliegerwohnung) or landlords with a small number of tenants (e.g., 1-5 tenants) who are responsible for creating annual utility cost statements (Nebenkostenabrechnungen) for their tenants.
+
+3. User Stories
+
+Primary User Story: "As a landlord, I want to record shared expenses (utility readings, other costs) as they occur throughout the year, so that I can generate an annual utility cost statement (Nebenkostenabrechnung) with a single click, without having to manually create and manage a new spreadsheet each year."
+
+4. Features & Requirements
+
+Core Features (Must-Haves for MVP):
+
+M1: Property Unit Management: Allow the landlord to create and manage property units (e.g., main apartment, tenant apartment) including details like name and living area (m²) for correct cost allocation.
+
+M2: Basic Tenant Management: Allow the landlord to create tenants and assign them to a property unit, including the number of occupants for allocation keys based on person count.
+
+M3: Meter Management: Allow the landlord to define and manage various utility meters (e.g., electricity, water, oil) with their type, unit (kWh, m³), and assignment (to a unit or shared).
+
+M4: Manual Meter Reading Entry: Enable the landlord to manually input meter readings with date and value for each meter.
+
+M5: View Meter Reading History: Allow the landlord to view a list/history of recorded meter readings per meter for verification.
+
+M6: Basic Consumption Calculation: Automatically calculate consumption per meter for a defined period (e.g., month, year) based on start and end readings.
+
+M7: Cost Type & Tariff Management:
+
+Allow definition of various cost types (e.g., "General Electricity," "Heating Oil").
+
+Allow input of prices per unit (€/kWh, €/m³) for consumption-based cost types for a period.
+
+Allow input of total costs for non-consumption-based cost types for a billing period (e.g., Insurance €500/year).
+
+M8: Allocation Key Definition: Allow the landlord to define available allocation keys (e.g., "by living area," "by number of persons," "by individual consumption," "fixed share (common)").
+
+M9: Assign Allocation Keys to Cost Types: Allow the landlord to assign the correct allocation key to each cost type.
+
+M10: Define Billing Period: Allow the landlord to set a global billing period (start/end date) for the annual statement.
+
+M11: Core Billing Logic: Calculate total costs per cost type and distribute them to units/tenants based on assigned allocation keys and master data.
+
+M12: Simple Billing Report Generation: Enable the landlord to generate and print a simple, clear HTML report per tenant showing allocated costs and calculation basis.
+
+UI/UX Concept:
+The UI should be clean, well-structured, and significantly more user-friendly than a complex spreadsheet. Navigation will be intuitive, guiding the user through setup and data entry. Key elements include:
+
+Clear Data Entry Forms for units, tenants, meters, readings, and costs.
+
+Organized Lists/Tables for displaying existing data for easy review.
+
+A Guided Workflow for report generation.
+
+A Simple Report Display (HTML, printable) itemizing costs.
+
+Clear presentation of meter reading history and calculated consumptions.
+
+5. Out of Scope (for MVP)
+
+Home Assistant Integration (S1)
+
+Prepayment (Vorauszahlungen) Management (S2)
+
+Detailed Tenant Management (mid-year moves) (S3)
+
+Advanced/Enhanced Billing Report (PDF export, styling) (S4)
+
+Monthly Consumption Overview/Trends (charts) (S5)
+
+Advanced Data Editing/Deletion (S6)
+
+Irregular/Unexpected Cost Management (S7)
+
+Advanced Analytics & Comparisons (C1)
+
+Document Uploads (C2)
+
+User Accounts & Login System (C3 - assuming local deployment)
+
+Dashboard/Overview Page (C4)
+
+Dedicated API for Future Extensions (C5)
+
+Full Accounting Features (W1), Direct Bank Integration (W2), Tenant Login/Portal (W3), Continuous Real-time Sync (W4).
+
+6. Success Metrics
+
+Core Task Completion Rate: Percentage of users successfully generating at least one annual cost statement. (Initially qualitative/manual check).
+
+User-Reported Time Savings / Satisfaction: Feedback on time saved or satisfaction with the generated report compared to previous methods. (Gathered via direct feedback).

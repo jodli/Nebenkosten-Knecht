@@ -1,0 +1,165 @@
+Part 2: Technical Design Document (Tech Design Doc) - MVP (Revised)
+
+1. System Overview
+
+High-level Description: Nebenkosten-Knecht is a web application designed to run locally on the user's machine. It will provide functionalities for managing properties, tenants, utility meters, costs, and generating annual utility statements. The system will consist of a frontend for user interaction and a backend (built with Rust/Actix-Web) for business logic and data persistence.
+
+Platform: Web app (intended for local deployment/use initially).
+
+2. Tech Stack (Recommended & Revised)
+
+Frontend:
+
+Language: JavaScript (or TypeScript)
+
+Framework: Vue.js
+
+Styling: Tailwind CSS
+
+Backend/Core Logic:
+
+Language: Rust
+
+Framework: Actix-Web
+
+Database:
+
+ORM: Diesel
+
+Database System: SQLite (for MVP simplicity, Diesel supports PostgreSQL if scaling is needed later).
+
+Other Tools/Libraries:
+
+cargo (Rust's package manager and build tool)
+
+npm or yarn for JS package management
+
+Templating Engine (for HTML report generation): e.g., Tera, Askama, or Handlebars-rust.
+
+3. Architecture & Data Flow
+
+Key Components:
+
+Frontend UI: Handles user input, displays data, and presents reports. Built with Vue.js components.
+
+Backend API: Actix-Web-based RESTful API to handle requests from the frontend (CRUD operations for data, triggering calculations, report generation).
+
+Data Management Module: Rust logic using Diesel ORM to interact with the SQLite database (define schema, create, read, update, delete records for units, tenants, meters, readings, costs).
+
+Consumption Calculation Engine: Rust logic to calculate utility consumption based on meter readings.
+
+Cost Allocation Engine: Rust logic to apply defined allocation keys to various cost types and distribute them among tenants/units.
+
+Report Generation Module: Rust logic using a chosen templating engine (e.g., Tera) to compile data and generate an HTML-based report.
+
+Data Flow Description:
+
+User interacts with the Vue.js frontend in their browser.
+
+Data input (e.g., new meter reading, cost item) is sent via API calls (HTTP requests) to the Actix-Web backend.
+
+The Actix-Web backend processes the request, validates data, and uses the Data Management Module (with Diesel) to store/retrieve information from the SQLite database.
+
+For calculations (consumption, cost allocation), relevant data is fetched from the database, processed by the respective Rust-based engines (Consumption Calculation, Cost Allocation).
+
+When a report is requested, the Report Generation Module (Rust) gathers all necessary calculated and master data, formats it into HTML using a templating engine, and sends it back to the frontend for display and printing.
+
+4. Feature Implementation Notes (High-Level Technical Approach for M1-M12 with Rust/Actix-Web/Diesel)
+
+M1-M3 (Unit, Tenant, Meter Management):
+
+Backend: Define database schema using Diesel migrations. Create Rust structs representing Units, Tenants, Meters, and implement Diesel query logic. Expose CRUD operations via Actix-Web handlers/routes.
+
+Frontend: Vue.js components with forms for creating/editing, and tables for listing these entities.
+
+M4 (Manual Meter Reading Entry):
+
+Backend: Diesel schema/struct for MeterReadings (linked to Meter, value, date). Actix-Web handler to save new readings. Validation in Rust: ensure reading date is after the last reading for that meter.
+
+Frontend: Form within the context of a selected meter to input new readings.
+
+M5 (View Meter Reading History):
+
+Backend: Actix-Web handler to fetch all readings for a specific meter using Diesel, ordered by date.
+
+Frontend: Display readings in a table/list format.
+
+M6 (Basic Consumption Calculation):
+
+Backend: Rust function that takes two readings (or a series for a period) for a meter and calculates the difference. Can be triggered on demand or when viewing period summaries.
+
+Frontend: Display calculated consumption alongside reading history or in report previews.
+
+M7 (Cost Type & Tariff Management):
+
+Backend: Diesel schema/structs for CostTypes (name, type - consumption-based/fixed) and Tariffs (linked to CostType, price_per_unit, valid_from, valid_to). Actix-Web handlers for CRUD.
+
+Frontend: Forms and lists for managing cost types and their associated tariffs/fixed costs.
+
+M8 (Allocation Key Definition):
+
+Backend: Could be a predefined Rust enum initially, or a Diesel-managed table for user-defined keys (name, description).
+
+Frontend: Dropdown/selection UI when assigning to cost types.
+
+M9 (Assign Allocation Keys to Cost Types):
+
+Backend: Link CostType struct/table to an AllocationKey (e.g., foreign key in Diesel).
+
+Frontend: UI (e.g., dropdown in CostType form) to make this assignment.
+
+M10 (Define Billing Period):
+
+Backend: No specific storage, user inputs this dynamically when generating a report via API parameters.
+
+Frontend: Date pickers for start/end date for report generation.
+
+M11 (Core Billing Logic):
+
+Backend: Complex Rust service/module.
+
+Fetch all relevant costs and readings for the period using Diesel.
+
+For each CostType:
+
+If consumption-based: Calculate total consumed units * tariff.
+
+If fixed: Use total cost.
+
+Apply the assigned AllocationKey (Rust logic):
+
+'by living area': Distribute cost based on unit.area_m2 / total_area_m2_for_involved_units.
+
+'by_persons': Distribute based on unit.persons / total_persons_for_involved_units.
+
+'by_individual_consumption': Link cost directly to consumption from specific meters of a unit.
+
+Store calculated shares per unit/tenant (or calculate on-the-fly for the report).
+
+M12 (Simple Billing Report Generation):
+
+Backend: Actix-Web handler that takes tenant_id and billing_period. Gathers all allocated costs for that tenant for the period. Uses a Rust templating engine (e.g., Tera, Askama) with an HTML template to structure the report.
+
+Frontend: Button to trigger report generation. Display the returned HTML in a new tab/window or a dedicated section. Browser's print functionality for printing.
+
+5. Error Handling
+
+The app will provide clear, user-friendly error messages.
+
+Messages will state what went wrong, indicate the problematic input/field, and suggest corrective actions.
+
+Backend (Actix-Web/Rust) will use mechanisms like Result<T, E> for internal error propagation. User-facing errors will be mapped to appropriate HTTP responses and clear messages. Detailed technical errors logged server-side.
+
+Proactive input validation in frontend forms (e.g., date formats, numeric values) will prevent common errors.
+
+6. Data Handling & Security
+
+Storage: Data will be stored locally in an SQLite database file on the user's machine, managed via Diesel.
+
+Privacy/Security: Standard local file system security applies. No specific app-level encryption for MVP.
+
+Data Backup: User is responsible for backing up their local database file.
+
+7. Development Timeline
+
+Estimated timeframe: 6 months. (Note: If Rust, Actix-Web, and Diesel are new to the developer, this timeline might be ambitious or require significant learning time factored in. However, we'll keep the estimate as provided by the user.)
