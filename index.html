@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nebenkosten-Knecht Project</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #0056b3;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: #0056b3;
+            margin-top: 30px;
+        }
+
+        .card {
+            background: #f9f9f9;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .button {
+            display: inline-block;
+            background: #0056b3;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .button:hover {
+            background: #003d7a;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        code {
+            background: #f0f0f0;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Nebenkosten-Knecht Project</h1>
+
+    <div class="card">
+        <h2>Project Status: Increment 1 Complete</h2>
+        <p>
+            The first increment of Nebenkosten-Knecht has been successfully implemented.
+            This provides the foundation for managing property units, tenants, and meters.
+        </p>
+        <p>
+            <a href="MILESTONE-1-COMPLETED.md" class="button">View Completion Report</a>
+            <a href="QUICKSTART.md" class="button">Quick Start Guide</a>
+        </p>
+    </div>
+
+    <h2>Project Overview</h2>
+    <p>
+        Nebenkosten-Knecht is a utility for landlords to track and calculate utility costs
+        and generate accurate annual utility cost statements (Nebenkostenabrechnungen) for tenants.
+    </p>
+
+    <h2>Available Features</h2>
+    <ul>
+        <li><strong>Property Unit Management</strong>: Create, edit, and delete property units with living area
+            information</li>
+        <li><strong>Tenant Management</strong>: Manage tenants and assign them to property units</li>
+        <li><strong>Meter Management</strong>: Define utility meters (electricity, water, etc.) and assign them to units
+            or mark as common</li>
+    </ul>
+
+    <h2>Running the Application</h2>
+    <p>You can start the application using the following commands:</p>
+    <code>./run.sh</code>
+    <p>Or run the backend and frontend separately:</p>
+    <code>./backend/run.sh</code>
+    <p>and</p>
+    <code>./frontend/run.sh</code>
+
+    <h2>Documentation</h2>
+    <ul>
+        <li><a href="README.md">Main README</a> - Complete project documentation</li>
+        <li><a href="QUICKSTART.md">Quick Start Guide</a> - Get up and running quickly</li>
+        <li><a href="Increments-MVP.txt">Incremental Development Plan</a> - Future development roadmap</li>
+    </ul>
+
+    <h2>Next Steps (Increment 2)</h2>
+    <p>
+        The next phase of development will focus on:
+    </p>
+    <ul>
+        <li>Manual Meter Reading Entry</li>
+        <li>View Meter Reading History</li>
+        <li>Basic Consumption Calculation</li>
+    </ul>
+</body>
+
+</html>

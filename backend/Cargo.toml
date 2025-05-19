@@ -1,0 +1,24 @@
+[package]
+name = "nebenkosten-knecht"
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+description = "A utility for managing and generating Nebenkostenabrechnungen (utility cost statements)"
+
+[dependencies]
+actix-web = "4.3.1"
+actix-cors = "0.6.4"
+diesel = { version = "2.1.0", features = ["sqlite", "r2d2", "chrono"] }
+diesel_migrations = "2.1.0"
+dotenv = "0.15.0"
+serde = { version = "1.0.163", features = ["derive"] }
+serde_json = "1.0.96"
+chrono = { version = "0.4.26", features = ["serde"] }
+env_logger = "0.10.0"
+log = "0.4.19"
+thiserror = "1.0.40"
+r2d2 = "0.8.10"
+actix-files = "0.6.2"
+anyhow = "1.0.71"
+tera = "1.19.0"
+uuid = { version = "1.3.3", features = ["v4", "serde"] }

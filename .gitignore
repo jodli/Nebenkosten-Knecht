@@ -1,3 +1,27 @@
-frontend/node_modules
-backend/target
-frontend/build
+# Rust backend
+/backend/target/
+/backend/Cargo.lock
+/backend/*.rs.bk
+/backend/nebenkosten_knecht.db
+/backend/nebenkosten_knecht.db-shm
+/backend/nebenkosten_knecht.db-wal
+
+# Node.js frontend
+/frontend/node_modules/
+/frontend/dist/
+/frontend/build/
+/frontend/.cache/
+/frontend/.env.local
+/frontend/.env.*.local
+/frontend/npm-debug.log*
+/frontend/yarn-debug.log*
+/frontend/yarn-error.log*
+
+# Editor directories and files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
