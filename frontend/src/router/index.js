@@ -53,6 +53,34 @@ const routes = [
         name: 'MeterEdit',
         component: () => import('@/views/meters/MeterForm.vue'),
         props: true
+    },
+    {
+        path: '/meter-readings',
+        name: 'MeterReadings',
+        component: () => import('@/views/meter-readings/MeterReadingList.vue')
+    },
+    {
+        path: '/meter-readings/create',
+        name: 'MeterReadingCreate',
+        component: () => import('@/views/meter-readings/MeterReadingForm.vue')
+    },
+    {
+        path: '/meter-readings/:id',
+        name: 'MeterReadingEdit',
+        component: () => import('@/views/meter-readings/MeterReadingForm.vue'),
+        props: true
+    },
+    {
+        path: '/meter-readings/meter/:meterId',
+        name: 'MeterReadingsByMeter',
+        component: () => import('@/views/meter-readings/MeterReadingsByMeter.vue'),
+        props: true
+    },
+    {
+        path: '/meter-readings/consumption/:meterId',
+        name: 'MeterConsumption',
+        component: () => import('@/views/meter-readings/MeterConsumption.vue'),
+        props: true
     }
 ];
 

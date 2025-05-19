@@ -75,3 +75,31 @@ export const meterService = {
         return apiClient.delete(`/meters/${id}`);
     }
 };
+
+// Meter Readings API Service
+export const meterReadingService = {
+    getAll() {
+        return apiClient.get('/meter-readings');
+    },
+    get(id) {
+        return apiClient.get(`/meter-readings/${id}`);
+    },
+    getByMeter(meterId) {
+        return apiClient.get(`/meter-readings/by-meter/${meterId}`);
+    },
+    getByDateRange(meterId, startDate, endDate) {
+        return apiClient.get(`/meter-readings/by-date-range/${meterId}/${startDate}/${endDate}`);
+    },
+    getConsumption(meterId) {
+        return apiClient.get(`/meter-readings/consumption/${meterId}`);
+    },
+    create(data) {
+        return apiClient.post('/meter-readings', data);
+    },
+    update(id, data) {
+        return apiClient.put(`/meter-readings/${id}`, data);
+    },
+    delete(id) {
+        return apiClient.delete(`/meter-readings/${id}`);
+    }
+};
