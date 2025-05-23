@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with base URL
 const apiClient = axios.create({
-    baseURL: 'http://localhost:8080/api',
+    baseURL: 'http://localhost:8081/api',
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
@@ -101,5 +101,65 @@ export const meterReadingService = {
     },
     delete(id) {
         return apiClient.delete(`/meter-readings/${id}`);
+    }
+};
+
+// Cost Types API Service
+export const costTypeService = {
+    getAll() {
+        return apiClient.get('/cost-types');
+    },
+    get(id) {
+        return apiClient.get(`/cost-types/${id}`);
+    },
+    create(data) {
+        return apiClient.post('/cost-types', data);
+    },
+    update(id, data) {
+        return apiClient.put(`/cost-types/${id}`, data);
+    },
+    delete(id) {
+        return apiClient.delete(`/cost-types/${id}`);
+    },
+    getAllocationMethods() {
+        return apiClient.get('/cost-types/allocation-methods');
+    },
+    assignAllocationMethod(costTypeId, methodId) {
+        return apiClient.post(`/cost-types/${costTypeId}/allocation-methods/${methodId}`);
+    },
+    removeAllocationMethod(costTypeId, methodId) {
+        return apiClient.delete(`/cost-types/${costTypeId}/allocation-methods/${methodId}`);
+    }
+};
+
+// Tariffs API Service
+export const tariffService = {
+    getByCostType(costTypeId) {
+        return apiClient.get(`/tariffs/cost-type/${costTypeId}`);
+    },
+    create(data) {
+        return apiClient.post('/tariffs', data);
+    },
+    update(id, data) {
+        return apiClient.put(`/tariffs/${id}`, data);
+    },
+    delete(id) {
+        return apiClient.delete(`/tariffs/${id}`);
+    }
+};
+
+// Fixed Costs API Service
+export const fixedCostService = {
+    getByCostType(costTypeId) {
+        return apiClient.get(`/fixed-costs/cost-type/${costTypeId}`);
+    },
+    create(data) {
+        return apiClient.post('/fixed-costs', data);
+    },
+    update(id, data) {
+        return apiClient.put(`/fixed-costs/${id}`, data);
+    },
+    delete(id) {
+        return apiClient.delete(`/fixed-costs/${id}`);
     }
 };

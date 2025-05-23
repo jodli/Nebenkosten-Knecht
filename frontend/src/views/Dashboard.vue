@@ -76,6 +76,24 @@
           </router-link>
         </div>
       </div>
+
+      <!-- Cost Types Card -->
+      <div class="card bg-white hover:shadow-lg transition-shadow">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-semibold text-gray-800">
+            Cost Types
+          </h2>
+          <span class="text-2xl font-bold text-primary-600">{{ costTypeCount }}</span>
+        </div>
+        <p class="text-gray-600 mt-2">
+          Manage cost types, tariffs, and allocation methods
+        </p>
+        <div class="mt-4">
+          <router-link to="/cost-types" class="btn btn-primary">
+            Manage Cost Types
+          </router-link>
+        </div>
+      </div>
     </div>
 
     <div class="mt-12">
@@ -97,6 +115,12 @@
           <li>
             <strong>Record Meter Readings</strong> - Regularly enter readings for your meters and track consumption
           </li>
+          <li>
+            <strong>Define Cost Types</strong> - Set up different types of costs and their allocation methods
+          </li>
+          <li>
+            <strong>Configure Tariffs & Fixed Costs</strong> - Add tariffs for consumption-based costs or fixed costs for regular expenses
+          </li>
         </ol>
       </div>
     </div>
@@ -104,7 +128,7 @@
 </template>
 
 <script>
-import { propertyUnitService, tenantService, meterService, meterReadingService } from '@/services/api';
+import { propertyUnitService, tenantService, meterService, meterReadingService, costTypeService } from '@/services/api';
 import { useToast } from 'vue-toastification';
 
 export default {
@@ -119,6 +143,7 @@ export default {
       tenantCount: 0,
       meterCount: 0,
       readingCount: 0,
+      costTypeCount: 0,
       loading: true,
       error: null
     };
@@ -146,6 +171,10 @@ export default {
         // Fetch meter readings
         const readingsResponse = await meterReadingService.getAll();
         this.readingCount = readingsResponse.data.length;
+
+        // Fetch cost types
+        const costTypesResponse = await costTypeService.getAll();
+        this.costTypeCount = costTypesResponse.data.length;
 
         this.loading = false;
       } catch (error) {

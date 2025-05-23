@@ -53,6 +53,7 @@ async fn main() -> std::io::Result<()> {
             .configure(handlers::tenant::configure)
             .configure(handlers::meter::configure)
             .configure(handlers::meter_reading::configure)
+            .configure(handlers::cost::configure)
     })
     .bind(bind_address)?
     .run()

@@ -81,6 +81,34 @@ const routes = [
         name: 'MeterConsumption',
         component: () => import('@/views/meter-readings/MeterConsumption.vue'),
         props: true
+    },
+    {
+        path: '/cost-types',
+        name: 'CostTypes',
+        component: () => import('@/views/cost-types/CostTypeList.vue')
+    },
+    {
+        path: '/cost-types/create',
+        name: 'CostTypeCreate',
+        component: () => import('@/views/cost-types/CostTypeForm.vue')
+    },
+    {
+        path: '/cost-types/:id',
+        name: 'CostTypeEdit',
+        component: () => import('@/views/cost-types/CostTypeForm.vue'),
+        props: true
+    },
+    {
+        path: '/cost-types/:id/tariffs',
+        name: 'CostTypeTariffs',
+        component: () => import('@/views/cost-types/TariffList.vue'),
+        props: true
+    },
+    {
+        path: '/cost-types/:id/fixed-costs',
+        name: 'CostTypeFixedCosts',
+        component: () => import('@/views/cost-types/FixedCostList.vue'),
+        props: true
     }
 ];
 

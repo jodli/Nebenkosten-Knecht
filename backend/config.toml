@@ -1,0 +1,39 @@
+[[units]]
+id = "unit1"
+name = "Apartment 1"
+wohnflaeche_real = 85.5
+wohnflaeche_heizung = 90.0
+personen = 2
+
+[[units]]
+id = "unit2"
+name = "Apartment 2"
+wohnflaeche_real = 75.0
+wohnflaeche_heizung = 80.0
+personen = 3
+
+[[counters]]
+id = "counter1"
+name = "Water Meter"
+unit = "unit1"
+type_ = "water"
+
+[[counters]]
+id = "counter2"
+name = "Heat Meter"
+unit = "unit1"
+type_ = "heating"
+
+[[cost_types]]
+id = "cost1"
+name = "Water Costs"
+umlage_logik_ref = "water_allocation"
+
+[[cost_types]]
+id = "cost2"
+name = "Heating Costs"
+umlage_logik_ref = "heating_allocation"
+
+[heizung_config]
+oel_verbrauch_pro_stunde_stufe1 = 0.5
+oel_verbrauch_pro_stunde_stufe2 = 1.0
