@@ -1,5 +1,5 @@
 use actix_web::{delete, get, post, put, web, HttpResponse, Responder};
-use chrono::{NaiveDate, NaiveDateTime, Utc};
+use chrono::{NaiveDate, NaiveDateTime};
 use diesel::prelude::*;
 use log::{error, info};
 
@@ -215,7 +215,7 @@ async fn create_reading(
     }
 
     // Check if meter exists
-    match meters::table
+    let _meter = match meters::table
         .filter(meters::id.eq(new_reading.meter_id))
         .first::<Meter>(conn)
     {
@@ -229,7 +229,7 @@ async fn create_reading(
             return HttpResponse::InternalServerError()
                 .json(format!("Error checking if meter exists: {}", e));
         }
-    }
+    };
 
     // Check if a reading with this date already exists for this meter
     let reading_date_timestamp = new_reading.reading_date.and_hms_opt(0, 0, 0).unwrap();

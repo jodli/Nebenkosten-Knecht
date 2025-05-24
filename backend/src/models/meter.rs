@@ -32,7 +32,7 @@ impl From<String> for MeterAssignment {
 }
 
 // Database model for meters
-#[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, Associations)]
+#[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, Associations, Selectable)]
 #[diesel(table_name = meters)]
 #[diesel(belongs_to(super::property_unit::PropertyUnit, foreign_key = property_unit_id))]
 pub struct Meter {

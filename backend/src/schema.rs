@@ -9,6 +9,29 @@ diesel::table! {
 }
 
 diesel::table! {
+    billing_periods (id) {
+        id -> Nullable<Integer>,
+        property_unit_id -> Integer,
+        start_date -> Text,
+        end_date -> Text,
+        name -> Text,
+        created_at -> Text,
+        updated_at -> Text,
+    }
+}
+
+diesel::table! {
+    billing_statements (id) {
+        id -> Nullable<Integer>,
+        billing_period_id -> Integer,
+        tenant_id -> Integer,
+        total_amount -> Float,
+        generated_at -> Text,
+        html_content -> Nullable<Text>,
+    }
+}
+
+diesel::table! {
     cost_type_allocations (id) {
         id -> Nullable<Integer>,
         cost_type_id -> Integer,
@@ -98,6 +121,9 @@ diesel::table! {
     }
 }
 
+diesel::joinable!(billing_periods -> property_units (property_unit_id));
+diesel::joinable!(billing_statements -> billing_periods (billing_period_id));
+diesel::joinable!(billing_statements -> tenants (tenant_id));
 diesel::joinable!(cost_type_allocations -> allocation_methods (allocation_method_id));
 diesel::joinable!(cost_type_allocations -> cost_types (cost_type_id));
 diesel::joinable!(fixed_costs -> cost_types (cost_type_id));
@@ -108,6 +134,8 @@ diesel::joinable!(tenants -> property_units (property_unit_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     allocation_methods,
+    billing_periods,
+    billing_statements,
     cost_type_allocations,
     cost_types,
     fixed_costs,

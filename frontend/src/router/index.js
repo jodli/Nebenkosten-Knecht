@@ -109,6 +109,17 @@ const routes = [
         name: 'CostTypeFixedCosts',
         component: () => import('@/views/cost-types/FixedCostList.vue'),
         props: true
+    },
+    {
+        path: '/billing-periods',
+        name: 'BillingPeriods',
+        component: () => import('@/views/billing/BillingPeriodList.vue')
+    },
+    {
+        path: '/billing-periods/:periodId/statements',
+        name: 'BillingStatementList',
+        component: () => import('@/views/billing/BillingStatementList.vue'),
+        props: true
     }
 ];
 

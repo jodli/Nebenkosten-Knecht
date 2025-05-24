@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::schema::tenants;
 
 // Database model for tenants
-#[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, Associations)]
+#[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, Associations, Selectable)]
 #[diesel(table_name = tenants)]
 #[diesel(belongs_to(super::property_unit::PropertyUnit, foreign_key = property_unit_id))]
 pub struct Tenant {

@@ -36,6 +36,11 @@
               active-class="bg-primary-800">
               Cost Types
             </router-link>
+            <router-link to="/billing-periods"
+              class="px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-primary-600"
+              active-class="bg-primary-800">
+              Billing
+            </router-link>
           </div>
         </div>
 
@@ -87,6 +92,11 @@
           class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-primary-600"
           active-class="bg-primary-800" @click="mobileMenuOpen = false">
           Cost Types
+        </router-link>
+        <router-link to="/billing-periods"
+          class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-primary-600"
+          active-class="bg-primary-800" @click="mobileMenuOpen = false">
+          Billing
         </router-link>
       </div>
     </div>

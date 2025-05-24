@@ -94,6 +94,24 @@
           </router-link>
         </div>
       </div>
+
+      <!-- Billing Card -->
+      <div class="card bg-white hover:shadow-lg transition-shadow">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-semibold text-gray-800">
+            Billing
+          </h2>
+          <span class="text-2xl font-bold text-primary-600">{{ billingPeriodCount }}</span>
+        </div>
+        <p class="text-gray-600 mt-2">
+          Create billing periods and generate tenant statements
+        </p>
+        <div class="mt-4">
+          <router-link to="/billing-periods" class="btn btn-primary">
+            Manage Billing
+          </router-link>
+        </div>
+      </div>
     </div>
 
     <div class="mt-12">
@@ -121,6 +139,9 @@
           <li>
             <strong>Configure Tariffs & Fixed Costs</strong> - Add tariffs for consumption-based costs or fixed costs for regular expenses
           </li>
+          <li>
+            <strong>Generate Statements</strong> - Create billing periods and generate tenant statements
+          </li>
         </ol>
       </div>
     </div>
@@ -129,6 +150,7 @@
 
 <script>
 import { propertyUnitService, tenantService, meterService, meterReadingService, costTypeService } from '@/services/api';
+import billingService from '@/services/billingService';
 import { useToast } from 'vue-toastification';
 
 export default {
@@ -144,6 +166,7 @@ export default {
       meterCount: 0,
       readingCount: 0,
       costTypeCount: 0,
+      billingPeriodCount: 0,
       loading: true,
       error: null
     };
@@ -175,6 +198,10 @@ export default {
         // Fetch cost types
         const costTypesResponse = await costTypeService.getAll();
         this.costTypeCount = costTypesResponse.data.length;
+
+        // Fetch billing periods
+        const billingPeriodsResponse = await billingService.getAllBillingPeriods();
+        this.billingPeriodCount = billingPeriodsResponse.data.length;
 
         this.loading = false;
       } catch (error) {

@@ -85,7 +85,7 @@ pub struct NewCostTypeAllocation {
 }
 
 // Database model for tariffs (consumption-based costs)
-#[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, Associations)]
+#[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, Associations, Selectable)]
 #[diesel(table_name = tariffs)]
 #[diesel(belongs_to(CostType))]
 pub struct Tariff {
@@ -128,7 +128,7 @@ pub struct TariffDto {
 }
 
 // Database model for fixed costs
-#[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, Associations)]
+#[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, Associations, Selectable)]
 #[diesel(table_name = fixed_costs)]
 #[diesel(belongs_to(CostType))]
 pub struct FixedCost {
