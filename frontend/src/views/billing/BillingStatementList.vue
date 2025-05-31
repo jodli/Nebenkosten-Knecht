@@ -1,101 +1,109 @@
 <template>
-  <div class="container mx-auto px-4 py-8">
-    <div class="mb-6">
-      <button @click="$router.go(-1)" class="text-blue-500 hover:text-blue-700">
-        &larr; Back to Billing Periods
-      </button>
-      <h1 class="text-2xl font-bold mt-2">Billing Statements for {{ periodName }}</h1>
-      <p class="text-gray-600">{{ formatDateRange() }}</p>
-    </div>
+  <div>
+    <PageHeader :title="`Billing Statements for ${periodName}`">
+      <template #subtitle>
+        {{ formatDateRange() }}
+      </template>
+      <template #actions>
+        <BaseButton
+          @click="$router.go(-1)"
+          variant="secondary"
+        >
+          ← Back to Billing Periods
+        </BaseButton>
+      </template>
+    </PageHeader>
 
-    <!-- Loading State -->
-    <div v-if="loading" class="text-center py-8">
-      <div class="spinner"></div>
-      <p class="mt-2">Loading...</p>
-    </div>
+    <LoadingState
+      v-if="loading"
+      message="Loading..."
+    />
 
-    <!-- Error State -->
-    <div v-else-if="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-      <p>{{ error }}</p>
-    </div>
+    <AlertState
+      v-else-if="error"
+      type="error"
+      :message="error"
+    />
 
-    <!-- Main Content -->
     <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Left Column: Tenant List -->
-      <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow">
-        <h2 class="text-lg font-bold mb-4">Tenants</h2>
+      <BaseCard class="lg:col-span-1">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">Tenants</h2>
 
-        <div v-if="tenants.length === 0" class="text-gray-500">
-          No tenants found for this property unit.
-        </div>
+        <EmptyState
+          v-if="tenants.length === 0"
+          title="No Tenants Found"
+          message="No tenants found for this property unit."
+          size="sm"
+        />
 
-        <ul v-else>
-          <li
+        <div v-else class="space-y-2">
+          <div
             v-for="tenant in tenants"
             :key="tenant.id"
             @click="selectTenant(tenant)"
             :class="[
-              'p-3 mb-2 border rounded cursor-pointer hover:bg-gray-100',
-              selectedTenant && selectedTenant.id === tenant.id ? 'bg-blue-100 border-blue-500' : 'border-gray-200'
+              'p-3 border rounded cursor-pointer hover:bg-gray-50 transition-colors',
+              selectedTenant && selectedTenant.id === tenant.id ? 'bg-blue-50 border-blue-300' : 'border-gray-200'
             ]"
           >
-            <div class="font-medium">{{ tenant.name }}</div>
+            <div class="font-medium text-gray-800">{{ tenant.name }}</div>
             <div class="text-sm text-gray-600">
               {{ tenant.persons }} person{{ tenant.persons !== 1 ? 's' : '' }} |
               {{ tenant.area }} m²
             </div>
-            <div v-if="tenantHasStatement(tenant.id)" class="mt-1 text-xs">
-              <span class="bg-green-100 text-green-800 px-2 py-1 rounded">Statement Generated</span>
-            </div>
-          </li>
-        </ul>
-
-        <button
-          v-if="selectedTenant"
-          @click="generateStatement"
-          class="w-full mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          :disabled="generating"
-        >
-          {{ generating ? 'Generating...' : (tenantHasStatement(selectedTenant.id) ? 'Regenerate Statement' : 'Generate Statement') }}
-        </button>
-      </div>
-
-      <!-- Right Column: Statement Preview -->
-      <div class="lg:col-span-2 bg-white rounded-lg shadow overflow-hidden">
-        <div v-if="!selectedTenant || (!selectedStatement && !generating)" class="p-6 text-center text-gray-500 flex flex-col items-center justify-center h-full">
-          <svg class="w-16 h-16 mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-          </svg>
-          <p>Select a tenant and generate a statement to preview it here.</p>
-        </div>
-
-        <div v-else-if="generating && !selectedStatement" class="p-6 text-center flex flex-col items-center justify-center h-full">
-          <div class="spinner mb-4"></div>
-          <p>Generating statement...</p>
-          <p class="text-sm text-gray-500 mt-2">This may take a moment while we calculate all costs.</p>
-        </div>
-
-        <div v-else-if="selectedStatement" class="flex flex-col h-full">
-          <div class="flex justify-between items-center p-4 border-b">
-            <h3 class="font-bold">
-              Statement for {{ selectedTenant.name }}
-            </h3>
-            <div class="flex space-x-2">
-              <button
-                @click="printStatement"
-                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm flex items-center"
-              >
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-                </svg>
-                Print
-              </button>
+            <div v-if="tenantHasStatement(tenant.id)" class="mt-1">
+              <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Statement Generated</span>
             </div>
           </div>
 
-          <div class="flex-grow overflow-auto p-4" v-html="statementHtml"></div>
+          <BaseButton
+            v-if="selectedTenant"
+            @click="generateStatement"
+            variant="primary"
+            class="w-full mt-4"
+            :disabled="generating"
+          >
+            {{ generating ? 'Generating...' : (tenantHasStatement(selectedTenant.id) ? 'Regenerate Statement' : 'Generate Statement') }}
+          </BaseButton>
         </div>
-      </div>
+      </BaseCard>
+
+      <!-- Right Column: Statement Preview -->
+      <BaseCard class="lg:col-span-2 min-h-[400px]">
+        <EmptyState
+          v-if="!selectedTenant || (!selectedStatement && !generating)"
+          title="No Statement Selected"
+          message="Select a tenant and generate a statement to preview it here."
+          size="lg"
+        />
+
+        <LoadingState
+          v-else-if="generating && !selectedStatement"
+          message="Generating statement..."
+          subtitle="This may take a moment while we calculate all costs."
+        />
+
+        <div v-else-if="selectedStatement" class="flex flex-col h-full">
+          <div class="flex justify-between items-center pb-4 border-b border-gray-200 mb-4">
+            <h3 class="text-lg font-semibold text-gray-800">
+              Statement for {{ selectedTenant.name }}
+            </h3>
+            <BaseButton
+              @click="printStatement"
+              variant="primary"
+              size="sm"
+            >
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+              </svg>
+              Print
+            </BaseButton>
+          </div>
+
+          <div class="flex-grow overflow-auto" v-html="statementHtml"></div>
+        </div>
+      </BaseCard>
     </div>
   </div>
 </template>
@@ -103,9 +111,25 @@
 <script>
 import billingService from '@/services/billingService';
 import { tenantService } from '@/services/api';
+import {
+  PageHeader,
+  BaseButton,
+  BaseCard,
+  LoadingState,
+  AlertState,
+  EmptyState
+} from '@/components/base';
 
 export default {
   name: 'BillingStatementList',
+  components: {
+    PageHeader,
+    BaseButton,
+    BaseCard,
+    LoadingState,
+    AlertState,
+    EmptyState
+  },
   props: {
     periodId: {
       type: [String, Number],

@@ -1,129 +1,142 @@
 <template>
-  <div class="container mx-auto p-4">
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold">{{ isEditing ? 'Edit' : 'Create' }} Cost Type</h1>
-      <router-link
-        to="/cost-types"
-        class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-      >
-        Back to List
-      </router-link>
-    </div>
+  <div>
+    <PageHeader :title="`${isEditing ? 'Edit' : 'Create'} Cost Type`">
+      <template #actions>
+        <BaseButton
+          @click="$router.push('/cost-types')"
+          variant="secondary"
+        >
+          Back to List
+        </BaseButton>
+      </template>
+    </PageHeader>
 
-    <div v-if="loading" class="text-center py-4">
-      <p class="text-gray-600">Loading...</p>
-    </div>
+    <LoadingState
+      v-if="loading"
+      message="Loading..."
+    />
 
-    <div v-else-if="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-      <strong class="font-bold">Error:</strong>
-      <span class="block sm:inline">{{ error }}</span>
-    </div>
+    <AlertState
+      v-else-if="error"
+      type="error"
+      :message="error"
+    />
 
-    <form v-else @submit.prevent="saveCostType" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-      <!-- Name field -->
-      <div class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2" for="name">
-          Name <span class="text-red-500">*</span>
-        </label>
-        <input
-          id="name"
-          v-model="form.name"
-          type="text"
-          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          required
-        />
-      </div>
-
-      <!-- Description field -->
-      <div class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2" for="description">
-          Description
-        </label>
-        <textarea
-          id="description"
-          v-model="form.description"
-          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline h-24"
-        ></textarea>
-      </div>
-
-      <!-- Cost Type field -->
-      <div class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2">
-          Cost Type <span class="text-red-500">*</span>
-        </label>
-        <div class="flex items-center mb-2">
+    <BaseCard v-else>
+      <form @submit.prevent="saveCostType" class="space-y-6">
+        <!-- Name field -->
+        <div>
+          <label class="form-label" for="name">
+            Name <span class="text-red-500">*</span>
+          </label>
           <input
-            id="consumption-based"
-            v-model="form.is_consumption_based"
-            type="radio"
-            :value="true"
-            class="mr-2"
+            id="name"
+            v-model="form.name"
+            type="text"
+            class="form-input"
+            required
           />
-          <label for="consumption-based" class="text-gray-700">Consumption-based</label>
         </div>
-        <div class="flex items-center">
-          <input
-            id="fixed"
-            v-model="form.is_consumption_based"
-            type="radio"
-            :value="false"
-            class="mr-2"
-          />
-          <label for="fixed" class="text-gray-700">Fixed</label>
+
+        <!-- Description field -->
+        <div>
+          <label class="form-label" for="description">
+            Description
+          </label>
+          <textarea
+            id="description"
+            v-model="form.description"
+            class="form-input h-24"
+          ></textarea>
         </div>
-      </div>
 
-      <!-- Unit field (only for consumption-based) -->
-      <div v-if="form.is_consumption_based" class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2" for="unit">
-          Unit <span class="text-red-500">*</span>
-        </label>
-        <input
-          id="unit"
-          v-model="form.unit"
-          type="text"
-          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          required
-          placeholder="kWh, m³, etc."
-        />
-      </div>
-
-      <!-- Allocation Methods -->
-      <div class="mb-6">
-        <label class="block text-gray-700 text-sm font-bold mb-2">
-          Allocation Methods
-        </label>
-        <div v-if="loadingAllocationMethods" class="text-gray-600">Loading allocation methods...</div>
-        <div v-else class="bg-gray-100 p-4 rounded">
-          <div v-for="method in allocationMethods" :key="method.id" class="flex items-center mb-2">
-            <input
-              :id="`method-${method.id}`"
-              v-model="selectedAllocationMethods"
-              type="checkbox"
-              :value="method.id"
-              class="mr-2"
-            />
-            <label :for="`method-${method.id}`" class="text-gray-700">
-              {{ method.name }}
-              <span v-if="method.description" class="text-gray-500 text-xs ml-2">
-                ({{ method.description }})
-              </span>
-            </label>
+        <!-- Cost Type field -->
+        <div>
+          <label class="form-label">
+            Cost Type <span class="text-red-500">*</span>
+          </label>
+          <div class="space-y-2">
+            <div class="flex items-center">
+              <input
+                id="consumption-based"
+                v-model="form.is_consumption_based"
+                type="radio"
+                :value="true"
+                class="form-radio mr-2"
+              />
+              <label for="consumption-based" class="text-gray-700">Consumption-based</label>
+            </div>
+            <div class="flex items-center">
+              <input
+                id="fixed"
+                v-model="form.is_consumption_based"
+                type="radio"
+                :value="false"
+                class="form-radio mr-2"
+              />
+              <label for="fixed" class="text-gray-700">Fixed</label>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Submit button -->
-      <div class="flex items-center justify-between">
-        <button
-          type="submit"
-          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-          :disabled="submitting"
-        >
-          {{ submitting ? 'Saving...' : 'Save Cost Type' }}
-        </button>
-      </div>
-    </form>
+        <!-- Unit field (only for consumption-based) -->
+        <div v-if="form.is_consumption_based">
+          <label class="form-label" for="unit">
+            Unit <span class="text-red-500">*</span>
+          </label>
+          <input
+            id="unit"
+            v-model="form.unit"
+            type="text"
+            class="form-input"
+            required
+            placeholder="kWh, m³, etc."
+          />
+        </div>
+
+        <!-- Allocation Methods -->
+        <div>
+          <label class="form-label">
+            Allocation Methods
+          </label>
+
+          <LoadingState
+            v-if="loadingAllocationMethods"
+            message="Loading allocation methods..."
+            size="sm"
+          />
+
+          <div v-else class="bg-gray-50 p-4 rounded-lg space-y-2">
+            <div v-for="method in allocationMethods" :key="method.id" class="flex items-center">
+              <input
+                :id="`method-${method.id}`"
+                v-model="selectedAllocationMethods"
+                type="checkbox"
+                :value="method.id"
+                class="form-checkbox mr-2"
+              />
+              <label :for="`method-${method.id}`" class="text-gray-700">
+                {{ method.name }}
+                <span v-if="method.description" class="text-gray-500 text-sm ml-2">
+                  ({{ method.description }})
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit button -->
+        <div class="flex justify-end">
+          <BaseButton
+            type="submit"
+            variant="primary"
+            :disabled="submitting"
+          >
+            {{ submitting ? 'Saving...' : 'Save Cost Type' }}
+          </BaseButton>
+        </div>
+      </form>
+    </BaseCard>
   </div>
 </template>
 
@@ -131,9 +144,23 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { costTypeService } from '@/services/api';
+import {
+  PageHeader,
+  BaseButton,
+  BaseCard,
+  LoadingState,
+  AlertState
+} from '@/components/base';
 
 export default {
   name: 'CostTypeForm',
+  components: {
+    PageHeader,
+    BaseButton,
+    BaseCard,
+    LoadingState,
+    AlertState
+  },
   props: {
     id: {
       type: String,

@@ -1,217 +1,199 @@
 <template>
-  <div class="container mx-auto p-4">
-    <div class="flex justify-between items-center mb-6">
-      <div>
-        <h1 class="text-2xl font-bold">Fixed Costs for {{ costType.name }}</h1>
-        <p v-if="costType.description" class="text-gray-600">{{ costType.description }}</p>
-      </div>
-      <div class="flex space-x-2">
-        <router-link
-          to="/cost-types"
-          class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+  <div>
+    <PageHeader :title="`Fixed Costs for ${costType.name}`">
+      <template #subtitle v-if="costType.description">
+        {{ costType.description }}
+      </template>
+      <template #actions>
+        <BaseButton
+          @click="$router.push('/cost-types')"
+          variant="secondary"
         >
           Back to List
-        </router-link>
-      </div>
-    </div>
+        </BaseButton>
+      </template>
+    </PageHeader>
 
-    <div v-if="loading" class="text-center py-4">
-      <p class="text-gray-600">Loading fixed costs...</p>
-    </div>
+    <LoadingState
+      v-if="loading"
+      message="Loading fixed costs..."
+    />
 
-    <div v-else-if="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-      <strong class="font-bold">Error:</strong>
-      <span class="block sm:inline">{{ error }}</span>
-    </div>
+    <AlertState
+      v-else-if="error"
+      type="error"
+      :message="error"
+    />
 
-    <!-- Add Fixed Cost Form -->
-    <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-6">
-      <h2 class="text-xl font-bold mb-4">Add New Fixed Cost</h2>
-      <form @submit.prevent="addFixedCost">
-        <div class="flex flex-wrap -mx-3 mb-4">
-          <div class="w-full md:w-1/3 px-3 mb-6 md:mb-0">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="amount">
-              Amount <span class="text-red-500">*</span>
-            </label>
-            <input
-              id="amount"
-              v-model.number="newFixedCost.amount"
-              type="number"
-              step="0.01"
-              min="0.01"
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
-            />
-          </div>
-          <div class="w-full md:w-1/3 px-3 mb-6 md:mb-0">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="billing-period-start">
-              Billing Period Start <span class="text-red-500">*</span>
-            </label>
-            <input
-              id="billing-period-start"
-              v-model="newFixedCost.billing_period_start"
-              type="date"
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
-            />
-          </div>
-          <div class="w-full md:w-1/3 px-3 mb-6 md:mb-0">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="billing-period-end">
-              Billing Period End <span class="text-red-500">*</span>
-            </label>
-            <input
-              id="billing-period-end"
-              v-model="newFixedCost.billing_period_end"
-              type="date"
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
-            />
-          </div>
-        </div>
-        <div class="flex items-center justify-end">
-          <button
-            type="submit"
-            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            :disabled="submitting"
-          >
-            {{ submitting ? 'Adding...' : 'Add Fixed Cost' }}
-          </button>
-        </div>
-      </form>
-    </div>
-
-    <!-- Fixed Costs List -->
-    <div v-if="!fixedCosts.length" class="text-center py-6 bg-white shadow-md rounded">
-      <p class="text-lg text-gray-600">No fixed costs found for this cost type.</p>
-    </div>
-
-    <div v-else class="bg-white shadow overflow-hidden rounded-lg mb-6">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Billing Period</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-          <tr v-for="cost in fixedCosts" :key="cost.id">
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="text-sm font-medium text-gray-900">{{ formatCurrency(cost.amount) }}</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="text-sm text-gray-900">
-                {{ formatDate(cost.billing_period_start) }} - {{ formatDate(cost.billing_period_end) }}
-              </div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              <div class="flex space-x-2">
-                <button
-                  @click="editFixedCost(cost)"
-                  class="text-blue-600 hover:text-blue-900"
-                >
-                  Edit
-                </button>
-                <button
-                  @click="confirmDelete(cost)"
-                  class="text-red-600 hover:text-red-900"
-                >
-                  Delete
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Edit Fixed Cost Modal -->
-    <div v-if="showEditModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
-      <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Edit Fixed Cost</h3>
-        <form @submit.prevent="updateFixedCost">
-          <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-amount">
-              Amount <span class="text-red-500">*</span>
-            </label>
-            <input
-              id="edit-amount"
-              v-model.number="editingFixedCost.amount"
-              type="number"
-              step="0.01"
-              min="0.01"
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
-            />
-          </div>
-          <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-billing-period-start">
-              Billing Period Start <span class="text-red-500">*</span>
-            </label>
-            <input
-              id="edit-billing-period-start"
-              v-model="editingFixedCost.billing_period_start"
-              type="date"
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
-            />
-          </div>
-          <div class="mb-6">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-billing-period-end">
-              Billing Period End <span class="text-red-500">*</span>
-            </label>
-            <input
-              id="edit-billing-period-end"
-              v-model="editingFixedCost.billing_period_end"
-              type="date"
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
-            />
+    <div v-else class="space-y-6">
+      <!-- Add Fixed Cost Form -->
+      <BaseCard>
+        <h2 class="text-xl font-semibold text-gray-800 mb-6">Add New Fixed Cost</h2>
+        <form @submit.prevent="addFixedCost" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="form-label" for="amount">
+                Amount <span class="text-red-500">*</span>
+              </label>
+              <input
+                id="amount"
+                v-model.number="newFixedCost.amount"
+                type="number"
+                step="0.01"
+                min="0.01"
+                class="form-input"
+                required
+              />
+            </div>
+            <div>
+              <label class="form-label" for="billing-period-start">
+                Billing Period Start <span class="text-red-500">*</span>
+              </label>
+              <input
+                id="billing-period-start"
+                v-model="newFixedCost.billing_period_start"
+                type="date"
+                class="form-input"
+                required
+              />
+            </div>
+            <div>
+              <label class="form-label" for="billing-period-end">
+                Billing Period End <span class="text-red-500">*</span>
+              </label>
+              <input
+                id="billing-period-end"
+                v-model="newFixedCost.billing_period_end"
+                type="date"
+                class="form-input"
+                required
+              />
+            </div>
           </div>
           <div class="flex justify-end">
-            <button
-              type="button"
-              @click="showEditModal = false"
-              class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded mr-2"
-            >
-              Cancel
-            </button>
-            <button
+            <BaseButton
               type="submit"
-              class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              variant="primary"
               :disabled="submitting"
             >
-              {{ submitting ? 'Saving...' : 'Save Changes' }}
-            </button>
+              {{ submitting ? 'Adding...' : 'Add Fixed Cost' }}
+            </BaseButton>
           </div>
         </form>
-      </div>
-    </div>
+      </BaseCard>
 
-    <!-- Delete Confirmation Modal -->
-    <div v-if="showDeleteModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
-      <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Confirm Deletion</h3>
-        <p class="text-gray-600 mb-6">
-          Are you sure you want to delete the fixed cost of {{ formatCurrency(fixedCostToDelete.amount) }}
-          for period {{ formatDate(fixedCostToDelete.billing_period_start) }} - {{ formatDate(fixedCostToDelete.billing_period_end) }}?
-          This action cannot be undone.
-        </p>
-        <div class="flex justify-end">
-          <button
-            @click="showDeleteModal = false"
-            class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded mr-2"
-          >
-            Cancel
-          </button>
-          <button
-            @click="deleteFixedCost"
-            class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-            :disabled="submitting"
-          >
-            {{ submitting ? 'Deleting...' : 'Delete' }}
-          </button>
-        </div>
+      <!-- Fixed Costs List -->
+      <EmptyState
+        v-if="!fixedCosts.length"
+        title="No Fixed Costs Found"
+        message="No fixed costs found for this cost type."
+      />
+
+      <BaseTable
+        v-else
+        :columns="tableHeaders"
+        :data="fixedCosts"
+        :actions="tableActions"
+        @action="handleTableAction"
+      >
+        <template #cell-amount="{ item }">
+          €{{ item.amount.toFixed(2) }}
+        </template>
+        <template #cell-billing_period="{ item }">
+          {{ formatDate(item.billing_period_start) }} - {{ formatDate(item.billing_period_end) }}
+        </template>
+      </BaseTable>
+
+      <!-- Edit Fixed Cost Modal -->
+      <div v-if="showEditModal" class="modal-overlay">
+        <BaseCard class="max-w-md mx-4">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Edit Fixed Cost</h3>
+          <form @submit.prevent="updateFixedCost" class="space-y-4">
+            <div>
+              <label class="form-label" for="edit-amount">
+                Amount <span class="text-red-500">*</span>
+              </label>
+              <input
+                id="edit-amount"
+                v-model.number="editingFixedCost.amount"
+                type="number"
+                step="0.01"
+                min="0.01"
+                class="form-input"
+                required
+              />
+            </div>
+            <div>
+              <label class="form-label" for="edit-billing-period-start">
+                Billing Period Start <span class="text-red-500">*</span>
+              </label>
+              <input
+                id="edit-billing-period-start"
+                v-model="editingFixedCost.billing_period_start"
+                type="date"
+                class="form-input"
+                required
+              />
+            </div>
+            <div>
+              <label class="form-label" for="edit-billing-period-end">
+                Billing Period End <span class="text-red-500">*</span>
+              </label>
+              <input
+                id="edit-billing-period-end"
+                v-model="editingFixedCost.billing_period_end"
+                type="date"
+                class="form-input"
+                required
+              />
+            </div>
+            <div class="flex justify-end space-x-3">
+              <BaseButton
+                type="button"
+                @click="showEditModal = false"
+                variant="secondary"
+              >
+                Cancel
+              </BaseButton>
+              <BaseButton
+                type="submit"
+                variant="primary"
+                :disabled="submitting"
+              >
+                {{ submitting ? 'Saving...' : 'Save Changes' }}
+              </BaseButton>
+            </div>
+          </form>
+        </BaseCard>
+      </div>
+
+      <!-- Delete Confirmation Modal -->
+      <div v-if="showDeleteModal" class="modal-overlay">
+        <BaseCard class="max-w-md mx-4">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">
+            Confirm Deletion
+          </h3>
+          <p class="text-gray-600 mb-6">
+            Are you sure you want to delete the fixed cost of €{{ fixedCostToDelete.amount?.toFixed(2) }}
+            for period {{ formatDate(fixedCostToDelete.billing_period_start) }} - {{ formatDate(fixedCostToDelete.billing_period_end) }}?
+            This action cannot be undone.
+          </p>
+          <div class="flex justify-end space-x-3">
+            <BaseButton
+              @click="showDeleteModal = false"
+              variant="secondary"
+            >
+              Cancel
+            </BaseButton>
+            <BaseButton
+              @click="deleteFixedCost"
+              variant="danger"
+              :disabled="submitting"
+            >
+              {{ submitting ? 'Deleting...' : 'Delete' }}
+            </BaseButton>
+          </div>
+        </BaseCard>
       </div>
     </div>
   </div>
@@ -220,15 +202,34 @@
 <script>
 import { ref, onMounted } from 'vue';
 import { costTypeService, fixedCostService } from '@/services/api';
+import {
+  PageHeader,
+  BaseButton,
+  BaseCard,
+  BaseTable,
+  LoadingState,
+  AlertState,
+  EmptyState
+} from '@/components/base';
 
 export default {
   name: 'FixedCostList',
+  components: {
+    PageHeader,
+    BaseButton,
+    BaseCard,
+    BaseTable,
+    LoadingState,
+    AlertState,
+    EmptyState
+  },
   props: {
     id: {
       type: String,
       required: true
     }
-  },  setup(props) {
+  },
+  setup(props) {
     const costTypeId = parseInt(props.id);
 
     const costType = ref({});
@@ -236,6 +237,28 @@ export default {
     const loading = ref(true);
     const submitting = ref(false);
     const error = ref(null);
+
+    // Table configuration
+    const tableHeaders = [
+      { key: 'amount', label: 'Amount' },
+      { key: 'billing_period', label: 'Billing Period' }
+    ];
+
+    const tableActions = [
+      { key: 'edit', label: 'Edit', variant: 'secondary' },
+      { key: 'delete', label: 'Delete', variant: 'danger' }
+    ];
+
+    const handleTableAction = (action, item) => {
+      switch (action) {
+        case 'edit':
+          editFixedCost(item);
+          break;
+        case 'delete':
+          confirmDelete(item);
+          break;
+      }
+    };
 
     // Calculate default billing period (current year)
     const currentYear = new Date().getFullYear();
@@ -358,13 +381,6 @@ export default {
       }
     };
 
-    const formatCurrency = (amount) => {
-      return new Intl.NumberFormat('de-DE', {
-        style: 'currency',
-        currency: 'EUR'
-      }).format(amount);
-    };
-
     const formatDate = (dateString) => {
       const date = new Date(dateString);
       return new Intl.DateTimeFormat('de-DE').format(date);
@@ -386,12 +402,14 @@ export default {
       editingFixedCost,
       showDeleteModal,
       fixedCostToDelete,
+      tableHeaders,
+      tableActions,
+      handleTableAction,
       addFixedCost,
       editFixedCost,
       updateFixedCost,
       confirmDelete,
       deleteFixedCost,
-      formatCurrency,
       formatDate
     };
   }

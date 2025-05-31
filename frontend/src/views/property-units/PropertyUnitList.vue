@@ -1,92 +1,78 @@
 <template>
   <div>
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold text-gray-800">
-        Property Units
-      </h1>
-      <router-link
-        to="/property-units/create"
-        class="btn btn-primary"
-      >
-        Add Property Unit
-      </router-link>
-    </div>
-
-    <div
-      v-if="loading"
-      class="text-center py-8"
-    >
-      <p class="text-gray-600">
-        Loading property units...
-      </p>
-    </div>
-
-    <div
-      v-else-if="error"
-      class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded"
-    >
-      {{ error }}
-    </div>
-
-    <div
-      v-else-if="propertyUnits.length === 0"
-      class="card text-center py-8"
-    >
-      <p class="text-gray-600">
-        No property units found. Create your first property unit to get started.
-      </p>
-      <div class="mt-4">
-        <router-link
-          to="/property-units/create"
-          class="btn btn-primary"
+    <PageHeader title="Property Units">
+      <template #actions>
+        <BaseButton
+          @click="$router.push('/property-units/create')"
+          variant="primary"
         >
           Add Property Unit
-        </router-link>
-      </div>
-    </div>
+        </BaseButton>
+      </template>
+    </PageHeader>
 
-    <div
-      v-else
-      class="grid grid-cols-1 gap-4"
+    <LoadingState
+      v-if="loading"
+      message="Loading property units..."
+    />
+
+    <AlertState
+      v-else-if="error"
+      type="error"
+      :message="error"
+    />
+
+    <EmptyState
+      v-else-if="propertyUnits.length === 0"
+      title="No Property Units Found"
+      message="Create your first property unit to get started."
     >
-      <div
+      <template #actions>
+        <BaseButton
+          @click="$router.push('/property-units/create')"
+          variant="primary"
+        >
+          Add Property Unit
+        </BaseButton>
+      </template>
+    </EmptyState>
+
+    <div v-else class="card-grid"
+    >
+      <DataCard
         v-for="unit in propertyUnits"
         :key="unit.id"
-        class="card hover:shadow-lg transition-shadow"
+        :title="unit.name"
       >
-        <div class="flex justify-between items-start">
-          <div>
-            <h2 class="text-xl font-semibold text-gray-800">
-              {{ unit.name }}
-            </h2>
-            <p class="text-gray-600 mt-1">
-              Living Area: {{ unit.living_area_m2 }} m²
-            </p>
-          </div>
-          <div class="flex space-x-2">
-            <router-link
-              :to="`/property-units/${unit.id}`"
-              class="btn btn-secondary"
-            >
-              Edit
-            </router-link>
-            <button
-              class="btn btn-danger"
-              @click="confirmDelete(unit)"
-            >
-              Delete
-            </button>
-          </div>
-        </div>
-      </div>
+        <p class="text-gray-600">
+          <span class="font-medium">Living Area:</span> {{ unit.living_area_m2 }} m²
+        </p>
+
+        <template #actions>
+          <BaseButton
+            size="sm"
+            variant="secondary"
+            @click="$router.push(`/property-units/${unit.id}`)"
+          >
+            Edit
+          </BaseButton>
+          <BaseButton
+            size="sm"
+            variant="danger"
+            @click="confirmDelete(unit)"
+          >
+            Delete
+          </BaseButton>
+        </template>
+      </DataCard>
     </div>
 
-    <!-- Delete Confirmation Modal (simplified for MVP) -->
+    <!-- Delete Confirmation Modal -->
     <div
       v-if="showDeleteModal"
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
     >
-      <div class="bg-white rounded-lg p-6 max-w-md mx-auto">
+      <BaseCard class="max-w-md mx-4">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">
           Confirm Deletion
         </h3>
@@ -95,20 +81,20 @@
           This action cannot be undone.
         </p>
         <div class="flex justify-end space-x-3">
-          <button
-            class="btn btn-secondary"
+          <BaseButton
+            variant="secondary"
             @click="showDeleteModal = false"
           >
             Cancel
-          </button>
-          <button
-            class="btn btn-danger"
+          </BaseButton>
+          <BaseButton
+            variant="danger"
             @click="deletePropertyUnit"
           >
             Delete
-          </button>
+          </BaseButton>
         </div>
-      </div>
+      </BaseCard>
     </div>
   </div>
 </template>
@@ -116,9 +102,27 @@
 <script>
 import { propertyUnitService } from '@/services/api';
 import { useToast } from 'vue-toastification';
+import {
+  PageHeader,
+  BaseButton,
+  BaseCard,
+  DataCard,
+  LoadingState,
+  AlertState,
+  EmptyState
+} from '@/components/base';
 
 export default {
   name: 'PropertyUnitList',
+  components: {
+    PageHeader,
+    BaseButton,
+    BaseCard,
+    DataCard,
+    LoadingState,
+    AlertState,
+    EmptyState
+  },
   setup() {
     const toast = useToast();
     return { toast };

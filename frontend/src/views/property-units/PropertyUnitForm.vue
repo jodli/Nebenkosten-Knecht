@@ -1,10 +1,8 @@
 <template>
   <div>
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">
-      {{ isEditing ? 'Edit Property Unit' : 'Create Property Unit' }}
-    </h1>
+    <PageHeader :title="isEditing ? 'Edit Property Unit' : 'Create Property Unit'" />
 
-    <div class="card max-w-2xl mx-auto">
+    <BaseCard size="lg" class="max-w-2xl mx-auto">
       <form @submit.prevent="submitForm">
         <div class="mb-4">
           <label
@@ -16,12 +14,12 @@
             v-model="form.name"
             type="text"
             class="form-input"
-            :class="{ 'border-red-500': errors.name }"
+            :class="{ 'form-input-error': errors.name }"
             required
           >
           <p
             v-if="errors.name"
-            class="mt-1 text-sm text-red-600"
+            class="form-error"
           >
             {{ errors.name }}
           </p>
@@ -39,43 +37,51 @@
             min="0.1"
             step="0.01"
             class="form-input"
-            :class="{ 'border-red-500': errors.living_area_m2 }"
+            :class="{ 'form-input-error': errors.living_area_m2 }"
             required
           >
           <p
             v-if="errors.living_area_m2"
-            class="mt-1 text-sm text-red-600"
+            class="form-error"
           >
             {{ errors.living_area_m2 }}
           </p>
         </div>
 
         <div class="flex justify-between">
-          <router-link
-            to="/property-units"
-            class="btn btn-secondary"
+          <BaseButton
+            variant="secondary"
+            @click="$router.push('/property-units')"
           >
             Cancel
-          </router-link>
-          <button
+          </BaseButton>
+          <BaseButton
             type="submit"
-            class="btn btn-primary"
+            variant="primary"
             :disabled="loading"
           >
             {{ isEditing ? 'Update' : 'Create' }}
-          </button>
+          </BaseButton>
         </div>
       </form>
-    </div>
+    </BaseCard>
   </div>
 </template>
 
 <script>
 import { propertyUnitService } from '@/services/api';
+import PageHeader from '@/components/base/PageHeader.vue';
+import BaseCard from '@/components/base/BaseCard.vue';
+import BaseButton from '@/components/base/BaseButton.vue';
 import { useToast } from 'vue-toastification';
 
 export default {
   name: 'PropertyUnitForm',
+  components: {
+    PageHeader,
+    BaseCard,
+    BaseButton
+  },
   props: {
     id: {
       type: String,

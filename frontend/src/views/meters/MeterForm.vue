@@ -1,10 +1,8 @@
 <template>
   <div>
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">
-      {{ isEditing ? 'Edit Meter' : 'Create Meter' }}
-    </h1>
+    <PageHeader :title="isEditing ? 'Edit Meter' : 'Create Meter'" />
 
-    <div class="card max-w-2xl mx-auto">
+    <BaseCard size="lg" class="max-w-2xl mx-auto">
       <form @submit.prevent="submitForm">
         <div class="mb-4">
           <label
@@ -16,12 +14,12 @@
             v-model="form.name"
             type="text"
             class="form-input"
-            :class="{ 'border-red-500': errors.name }"
+            :class="{ 'form-input-error': errors.name }"
             required
           >
           <p
             v-if="errors.name"
-            class="mt-1 text-sm text-red-600"
+            class="form-error"
           >
             {{ errors.name }}
           </p>
@@ -37,13 +35,13 @@
             v-model="form.meter_type"
             type="text"
             class="form-input"
-            :class="{ 'border-red-500': errors.meter_type }"
+            :class="{ 'form-input-error': errors.meter_type }"
             placeholder="e.g., Electricity, Water, Gas"
             required
           >
           <p
             v-if="errors.meter_type"
-            class="mt-1 text-sm text-red-600"
+            class="form-error"
           >
             {{ errors.meter_type }}
           </p>
@@ -59,13 +57,13 @@
             v-model="form.unit"
             type="text"
             class="form-input"
-            :class="{ 'border-red-500': errors.unit }"
+            :class="{ 'form-input-error': errors.unit }"
             placeholder="e.g., kWh, m³"
             required
           >
           <p
             v-if="errors.unit"
-            class="mt-1 text-sm text-red-600"
+            class="form-error"
           >
             {{ errors.unit }}
           </p>
@@ -80,7 +78,7 @@
             id="assignment_type"
             v-model="form.assignment_type"
             class="form-input"
-            :class="{ 'border-red-500': errors.assignment_type }"
+            :class="{ 'form-input-error': errors.assignment_type }"
             required
           >
             <option value="unit">
@@ -92,7 +90,7 @@
           </select>
           <p
             v-if="errors.assignment_type"
-            class="mt-1 text-sm text-red-600"
+            class="form-error"
           >
             {{ errors.assignment_type }}
           </p>
@@ -110,7 +108,7 @@
             id="property_unit_id"
             v-model="form.property_unit_id"
             class="form-input"
-            :class="{ 'border-red-500': errors.property_unit_id }"
+            :class="{ 'form-input-error': errors.property_unit_id }"
             required
           >
             <option
@@ -129,7 +127,7 @@
           </select>
           <p
             v-if="errors.property_unit_id"
-            class="mt-1 text-sm text-red-600"
+            class="form-error"
           >
             {{ errors.property_unit_id }}
           </p>
@@ -149,31 +147,39 @@
         </div>
 
         <div class="flex justify-between">
-          <router-link
-            to="/meters"
-            class="btn btn-secondary"
+          <BaseButton
+            variant="secondary"
+            @click="$router.push('/meters')"
           >
             Cancel
-          </router-link>
-          <button
+          </BaseButton>
+          <BaseButton
             type="submit"
-            class="btn btn-primary"
+            variant="primary"
             :disabled="loading || (form.assignment_type === 'unit' && propertyUnits.length === 0)"
           >
             {{ isEditing ? 'Update' : 'Create' }}
-          </button>
+          </BaseButton>
         </div>
       </form>
-    </div>
+    </BaseCard>
   </div>
 </template>
 
 <script>
 import { meterService, propertyUnitService } from '@/services/api';
+import PageHeader from '@/components/base/PageHeader.vue';
+import BaseCard from '@/components/base/BaseCard.vue';
+import BaseButton from '@/components/base/BaseButton.vue';
 import { useToast } from 'vue-toastification';
 
 export default {
   name: 'MeterForm',
+  components: {
+    PageHeader,
+    BaseCard,
+    BaseButton
+  },
   props: {
     id: {
       type: String,

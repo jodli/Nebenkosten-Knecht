@@ -1,153 +1,180 @@
 <template>
-    <div>
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">
-                Meter Readings
-            </h1>
-            <router-link to="/meter-readings/create" class="btn btn-primary">
-                Add Reading
-            </router-link>
-        </div>
+  <div>
+    <PageHeader title="Meter Readings">
+      <template #actions>
+        <BaseButton
+          variant="primary"
+          @click="$router.push('/meter-readings/create')"
+        >
+          Add Reading
+        </BaseButton>
+      </template>
+    </PageHeader>
 
-        <div v-if="loading" class="text-center py-8">
-            <p class="text-gray-600">
-                Loading meter readings...
-            </p>
-        </div>
+    <LoadingState v-if="loading" message="Loading meter readings..." />
 
-        <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            {{ error }}
-        </div>
+    <AlertState v-else-if="error" type="error" :message="error" />
 
-        <div v-else-if="meterReadings.length === 0" class="card text-center py-8">
-            <p class="text-gray-600">
-                No meter readings found. Create your first meter reading to get started.
-            </p>
-            <div class="mt-4">
-                <router-link to="/meter-readings/create" class="btn btn-primary">
-                    Add Reading
-                </router-link>
+    <EmptyState
+      v-else-if="meterReadings.length === 0"
+      title="No meter readings found"
+      description="Create your first meter reading to get started."
+    >
+      <template #actions>
+        <BaseButton
+          variant="primary"
+          @click="$router.push('/meter-readings/create')"
+        >
+          Add Reading
+        </BaseButton>
+      </template>
+    </EmptyState>
+
+    <div v-else>
+      <BaseCard class="mb-6">
+        <div class="flex items-center space-x-2">
+          <label for="meterFilter" class="text-gray-700 font-medium">Filter by Meter:</label>
+          <select
+            id="meterFilter"
+            v-model="selectedMeterId"
+            class="form-input"
+            @change="filterByMeter"
+          >
+            <option value="">All Meters</option>
+            <option v-for="meter in meters" :key="meter.id" :value="meter.id">
+              {{ meter.name }} ({{ meter.meter_type }})
+            </option>
+          </select>
+        </div>
+      </BaseCard>
+
+      <BaseTable
+        :columns="tableHeaders"
+        :items="meterReadings"
+        :actions="tableActions"
+        @action="handleTableAction"
+      >
+        <template #cell-meter="{ item }">
+          <div v-if="getMeterById(item.meter_id)">
+            {{ getMeterById(item.meter_id).name }}
+            <span class="text-xs text-gray-500">
+              ({{ getMeterById(item.meter_id).meter_type }})
+            </span>
+          </div>
+          <div v-else class="text-gray-400">
+            Unknown Meter
+          </div>
+        </template>
+
+        <template #reading_date="{ item }">
+          {{ formatDate(item.reading_date) }}
+        </template>
+
+        <template #value="{ item }">
+          {{ item.value.toFixed(2) }}
+          <span class="text-xs text-gray-500" v-if="getMeterById(item.meter_id)">
+            {{ getMeterById(item.meter_id).unit }}
+          </span>
+        </template>
+
+        <template #notes="{ item }">
+          {{ item.notes || '-' }}
+        </template>
+      </BaseTable>
+
+      <div class="mt-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-3">
+          View by Meter
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div v-for="meter in meters" :key="meter.id" class="card p-4 hover:bg-gray-50 cursor-pointer"
+              @click="goToMeterReadings(meter.id)">
+            <h3 class="font-semibold text-blue-600">{{ meter.name }}</h3>
+            <div class="text-sm text-gray-600">
+              {{ meter.meter_type }} ({{ meter.unit }})
             </div>
+            <div class="mt-2 text-xs">
+              <span class="text-green-600">
+                View readings and consumption
+              </span>
+            </div>
+          </div>
         </div>
-
-        <div v-else>
-            <div class="mb-4">
-                <div class="flex items-center space-x-2">
-                    <label for="meterFilter" class="text-gray-700">Filter by Meter:</label>
-                    <select id="meterFilter" v-model="selectedMeterId" class="form-select" @change="filterByMeter">
-                        <option value="">All Meters</option>
-                        <option v-for="meter in meters" :key="meter.id" :value="meter.id">
-                            {{ meter.name }} ({{ meter.meter_type }})
-                        </option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="card overflow-x-auto">
-                <table class="min-w-full bg-white">
-                    <thead>
-                        <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
-                            <th class="py-3 px-6 text-left">Meter</th>
-                            <th class="py-3 px-6 text-left">Reading Date</th>
-                            <th class="py-3 px-6 text-right">Reading Value</th>
-                            <th class="py-3 px-6 text-left">Notes</th>
-                            <th class="py-3 px-6 text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-gray-600 text-sm">
-                        <tr v-for="reading in meterReadings" :key="reading.id"
-                            class="border-b border-gray-200 hover:bg-gray-50">
-                            <td class="py-3 px-6 text-left">
-                                <div v-if="getMeterById(reading.meter_id)">
-                                    {{ getMeterById(reading.meter_id).name }}
-                                    <span class="text-xs text-gray-500">
-                                        ({{ getMeterById(reading.meter_id).meter_type }})
-                                    </span>
-                                </div>
-                                <div v-else class="text-gray-400">
-                                    Unknown Meter
-                                </div>
-                            </td>
-                            <td class="py-3 px-6 text-left">
-                                {{ formatDate(reading.reading_date) }}
-                            </td>
-                            <td class="py-3 px-6 text-right">
-                                {{ reading.value.toFixed(2) }}
-                                <span class="text-xs text-gray-500" v-if="getMeterById(reading.meter_id)">
-                                    {{ getMeterById(reading.meter_id).unit }}
-                                </span>
-                            </td>
-                            <td class="py-3 px-6 text-left">
-                                {{ reading.notes || '-' }}
-                            </td>
-                            <td class="py-3 px-6 text-center">
-                                <div class="flex item-center justify-center space-x-2">
-                                    <router-link :to="`/meter-readings/${reading.id}`"
-                                        class="text-blue-500 hover:text-blue-700">
-                                        Edit
-                                    </router-link>
-                                    <button @click="confirmDelete(reading)" class="text-red-500 hover:text-red-700">
-                                        Delete
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="mt-6">
-                <h2 class="text-xl font-semibold text-gray-800 mb-3">
-                    View by Meter
-                </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div v-for="meter in meters" :key="meter.id" class="card p-4 hover:bg-gray-50 cursor-pointer"
-                        @click="goToMeterReadings(meter.id)">
-                        <h3 class="font-semibold text-blue-600">{{ meter.name }}</h3>
-                        <div class="text-sm text-gray-600">
-                            {{ meter.meter_type }} ({{ meter.unit }})
-                        </div>
-                        <div class="mt-2 text-xs">
-                            <span class="text-green-600">
-                                View readings and consumption
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+      </div>
+      <!-- Consumption Summary Section -->
+      <BaseCard class="mt-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-3">
+          Consumption Summary
+        </h2>
+        <p class="text-gray-600 mb-4">
+          View consumption analysis for each meter to track usage patterns.
+        </p>
+        <div class="space-y-2">
+          <BaseButton
+            v-for="meter in meters"
+            :key="meter.id"
+            variant="outline"
+            size="sm"
+            @click="goToMeterReadings(meter.id)"
+            class="mr-2 mb-2"
+          >
+            {{ meter.name }} ({{ meter.meter_type }})
+          </BaseButton>
         </div>
-
-        <!-- Confirmation Dialog -->
-        <div v-if="showConfirmation" class="fixed inset-0 flex items-center justify-center z-50">
-            <div class="fixed inset-0 bg-black opacity-50"></div>
-            <div class="bg-white p-6 rounded-lg shadow-lg z-10 max-w-md mx-auto">
-                <h3 class="text-lg font-semibold mb-4">
-                    Confirm Deletion
-                </h3>
-                <p>
-                    Are you sure you want to delete the meter reading from
-                    <span class="font-semibold">{{ selectedReading ? formatDate(selectedReading.reading_date) : ''
-                        }}</span>?
-                    This action cannot be undone.
-                </p>
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button @click="showConfirmation = false" class="btn btn-secondary">
-                        Cancel
-                    </button>
-                    <button @click="deleteReading" class="btn btn-danger">
-                        Delete
-                    </button>
-                </div>
-            </div>
-        </div>
+      </BaseCard>
     </div>
+
+    <!-- Confirmation Dialog -->
+    <div v-if="showConfirmation" class="modal-overlay">
+      <BaseCard class="modal-content max-w-md mx-auto">
+        <h3 class="text-lg font-semibold mb-4">
+          Confirm Deletion
+        </h3>
+        <p>
+          Are you sure you want to delete the meter reading from
+          <span class="font-semibold">{{ selectedReading ? formatDate(selectedReading.reading_date) : '' }}</span>?
+          This action cannot be undone.
+        </p>
+        <div class="mt-6 flex justify-end space-x-3">
+          <BaseButton
+            variant="secondary"
+            @click="showConfirmation = false"
+          >
+            Cancel
+          </BaseButton>
+          <BaseButton
+            variant="danger"
+            @click="deleteReading"
+          >
+            Delete
+          </BaseButton>
+        </div>
+      </BaseCard>
+    </div>
+  </div>
 </template>
 
 <script>
 import { meterReadingService, meterService } from '@/services/api';
+import PageHeader from '@/components/base/PageHeader.vue';
+import BaseCard from '@/components/base/BaseCard.vue';
+import BaseButton from '@/components/base/BaseButton.vue';
+import BaseTable from '@/components/base/BaseTable.vue';
+import LoadingState from '@/components/base/LoadingState.vue';
+import AlertState from '@/components/base/AlertState.vue';
+import EmptyState from '@/components/base/EmptyState.vue';
 
 export default {
     name: 'MeterReadingList',
+    components: {
+        PageHeader,
+        BaseCard,
+        BaseButton,
+        BaseTable,
+        LoadingState,
+        AlertState,
+        EmptyState
+    },
 
     data() {
         return {
@@ -157,7 +184,17 @@ export default {
             error: null,
             showConfirmation: false,
             selectedReading: null,
-            selectedMeterId: ''
+            selectedMeterId: '',
+            tableHeaders: [
+                { key: 'meter', label: 'Meter' },
+                { key: 'reading_date', label: 'Reading Date' },
+                { key: 'value', label: 'Reading Value', align: 'right' },
+                { key: 'notes', label: 'Notes' }
+            ],
+            tableActions: [
+                { key: 'edit', label: 'Edit', variant: 'primary' },
+                { key: 'delete', label: 'Delete', variant: 'danger' }
+            ]
         };
     },
 
@@ -191,6 +228,14 @@ export default {
 
         formatDate(dateString) {
             return new Date(dateString).toLocaleDateString();
+        },
+
+        handleTableAction(action, item) {
+            if (action === 'edit') {
+                this.$router.push(`/meter-readings/${item.id}`);
+            } else if (action === 'delete') {
+                this.confirmDelete(item);
+            }
         },
 
         confirmDelete(reading) {
@@ -240,27 +285,12 @@ export default {
 </script>
 
 <style scoped>
-.card {
-    @apply bg-white shadow rounded-lg p-4;
+.modal-overlay {
+  @apply fixed inset-0 flex items-center justify-center z-50;
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
-.btn {
-    @apply px-4 py-2 rounded-md text-sm font-medium;
-}
-
-.btn-primary {
-    @apply bg-blue-600 text-white hover:bg-blue-700;
-}
-
-.btn-secondary {
-    @apply bg-gray-200 text-gray-800 hover:bg-gray-300;
-}
-
-.btn-danger {
-    @apply bg-red-600 text-white hover:bg-red-700;
-}
-
-.form-select {
-    @apply block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm;
+.modal-content {
+  @apply bg-white p-6 rounded-lg shadow-lg z-10;
 }
 </style>

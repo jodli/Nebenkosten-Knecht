@@ -1,95 +1,82 @@
 <template>
   <div>
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold text-gray-800">
-        Tenants
-      </h1>
-      <router-link
-        to="/tenants/create"
-        class="btn btn-primary"
-      >
-        Add Tenant
-      </router-link>
-    </div>
-
-    <div
-      v-if="loading"
-      class="text-center py-8"
-    >
-      <p class="text-gray-600">
-        Loading tenants...
-      </p>
-    </div>
-
-    <div
-      v-else-if="error"
-      class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded"
-    >
-      {{ error }}
-    </div>
-
-    <div
-      v-else-if="tenants.length === 0"
-      class="card text-center py-8"
-    >
-      <p class="text-gray-600">
-        No tenants found. Create your first tenant to get started.
-      </p>
-      <div class="mt-4">
-        <router-link
-          to="/tenants/create"
-          class="btn btn-primary"
+    <PageHeader title="Tenants">
+      <template #actions>
+        <BaseButton
+          @click="$router.push('/tenants/create')"
+          variant="primary"
         >
           Add Tenant
-        </router-link>
-      </div>
-    </div>
+        </BaseButton>
+      </template>
+    </PageHeader>
 
-    <div
-      v-else
-      class="grid grid-cols-1 gap-4"
+    <LoadingState
+      v-if="loading"
+      message="Loading tenants..."
+    />
+
+    <AlertState
+      v-else-if="error"
+      type="error"
+      :message="error"
+    />
+
+    <EmptyState
+      v-else-if="tenants.length === 0"
+      title="No Tenants Found"
+      message="Create your first tenant to get started."
     >
-      <div
+      <template #actions>
+        <BaseButton
+          @click="$router.push('/tenants/create')"
+          variant="primary"
+        >
+          Add Tenant
+        </BaseButton>
+      </template>
+    </EmptyState>
+
+    <div v-else class="card-grid">
+      <DataCard
         v-for="tenant in tenants"
         :key="tenant.id"
-        class="card hover:shadow-lg transition-shadow"
+        :title="tenant.name"
       >
-        <div class="flex justify-between items-start">
-          <div>
-            <h2 class="text-xl font-semibold text-gray-800">
-              {{ tenant.name }}
-            </h2>
-            <p class="text-gray-600 mt-1">
-              Number of Persons: {{ tenant.number_of_persons }}
-            </p>
-            <p class="text-gray-600 mt-1">
-              Property Unit: {{ getPropertyUnitName(tenant.property_unit_id) }}
-            </p>
-          </div>
-          <div class="flex space-x-2">
-            <router-link
-              :to="`/tenants/${tenant.id}`"
-              class="btn btn-secondary"
-            >
-              Edit
-            </router-link>
-            <button
-              class="btn btn-danger"
-              @click="confirmDelete(tenant)"
-            >
-              Delete
-            </button>
-          </div>
+        <div class="space-y-2">
+          <p class="text-gray-600">
+            <span class="font-medium">Persons:</span> {{ tenant.number_of_persons }}
+          </p>
+          <p class="text-gray-600">
+            <span class="font-medium">Property Unit:</span> {{ getPropertyUnitName(tenant.property_unit_id) }}
+          </p>
         </div>
-      </div>
+
+        <template #actions>
+          <BaseButton
+            size="sm"
+            variant="secondary"
+            @click="$router.push(`/tenants/${tenant.id}`)"
+          >
+            Edit
+          </BaseButton>
+          <BaseButton
+            size="sm"
+            variant="danger"
+            @click="confirmDelete(tenant)"
+          >
+            Delete
+          </BaseButton>
+        </template>
+      </DataCard>
     </div>
 
-    <!-- Delete Confirmation Modal (simplified for MVP) -->
+    <!-- Delete Confirmation Modal -->
     <div
       v-if="showDeleteModal"
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
     >
-      <div class="bg-white rounded-lg p-6 max-w-md mx-auto">
+      <BaseCard class="max-w-md mx-4">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">
           Confirm Deletion
         </h3>
@@ -98,20 +85,20 @@
           This action cannot be undone.
         </p>
         <div class="flex justify-end space-x-3">
-          <button
-            class="btn btn-secondary"
+          <BaseButton
+            variant="secondary"
             @click="showDeleteModal = false"
           >
             Cancel
-          </button>
-          <button
-            class="btn btn-danger"
+          </BaseButton>
+          <BaseButton
+            variant="danger"
             @click="deleteTenant"
           >
             Delete
-          </button>
+          </BaseButton>
         </div>
-      </div>
+      </BaseCard>
     </div>
   </div>
 </template>
@@ -119,9 +106,27 @@
 <script>
 import { tenantService, propertyUnitService } from '@/services/api';
 import { useToast } from 'vue-toastification';
+import {
+  PageHeader,
+  BaseButton,
+  BaseCard,
+  DataCard,
+  LoadingState,
+  AlertState,
+  EmptyState
+} from '@/components/base';
 
 export default {
   name: 'TenantList',
+  components: {
+    PageHeader,
+    BaseButton,
+    BaseCard,
+    DataCard,
+    LoadingState,
+    AlertState,
+    EmptyState
+  },
   setup() {
     const toast = useToast();
     return { toast };

@@ -1,49 +1,41 @@
 <template>
   <div>
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold text-gray-800">
-        Meters
-      </h1>
-      <router-link
-        to="/meters/create"
-        class="btn btn-primary"
-      >
-        Add Meter
-      </router-link>
-    </div>
-
-    <div
-      v-if="loading"
-      class="text-center py-8"
-    >
-      <p class="text-gray-600">
-        Loading meters...
-      </p>
-    </div>
-
-    <div
-      v-else-if="error"
-      class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded"
-    >
-      {{ error }}
-    </div>
-
-    <div
-      v-else-if="meters.length === 0"
-      class="card text-center py-8"
-    >
-      <p class="text-gray-600">
-        No meters found. Create your first meter to get started.
-      </p>
-      <div class="mt-4">
-        <router-link
-          to="/meters/create"
-          class="btn btn-primary"
+    <PageHeader title="Meters">
+      <template #actions>
+        <BaseButton
+          @click="$router.push('/meters/create')"
+          variant="primary"
         >
           Add Meter
-        </router-link>
-      </div>
-    </div>
+        </BaseButton>
+      </template>
+    </PageHeader>
+
+    <LoadingState
+      v-if="loading"
+      message="Loading meters..."
+    />
+
+    <AlertState
+      v-else-if="error"
+      type="error"
+      :message="error"
+    />
+
+    <EmptyState
+      v-else-if="meters.length === 0"
+      title="No Meters Found"
+      message="Create your first meter to get started."
+    >
+      <template #actions>
+        <BaseButton
+          @click="$router.push('/meters/create')"
+          variant="primary"
+        >
+          Add Meter
+        </BaseButton>
+      </template>
+    </EmptyState>
 
     <div v-else>
       <!-- Common Meters Section -->
@@ -51,101 +43,97 @@
         v-if="commonMeters.length > 0"
         class="mb-8"
       >
-        <h2 class="text-xl font-semibold text-gray-800 mb-4">
+        <h2 class="section-title">
           Common Meters
         </h2>
-        <div class="grid grid-cols-1 gap-4">
-          <div
+        <div class="card-grid">
+          <DataCard
             v-for="meter in commonMeters"
             :key="meter.id"
-            class="card hover:shadow-lg transition-shadow"
+            :title="meter.name"
           >
-            <div class="flex justify-between items-start">
-              <div>
-                <h3 class="text-lg font-semibold text-gray-800">
-                  {{ meter.name }}
-                </h3>
-                <p class="text-gray-600 mt-1">
-                  Type: {{ meter.meter_type }}
-                </p>
-                <p class="text-gray-600">
-                  Unit: {{ meter.unit }}
-                </p>
-                <p class="text-gray-600">
-                  Assignment: Common
-                </p>
-              </div>
-              <div class="flex space-x-2">
-                <router-link
-                  :to="`/meters/${meter.id}`"
-                  class="btn btn-secondary"
-                >
-                  Edit
-                </router-link>
-                <button
-                  class="btn btn-danger"
-                  @click="confirmDelete(meter)"
-                >
-                  Delete
-                </button>
-              </div>
+            <div class="space-y-1">
+              <p class="text-gray-600">
+                <span class="font-medium">Type:</span> {{ meter.meter_type }}
+              </p>
+              <p class="text-gray-600">
+                <span class="font-medium">Unit:</span> {{ meter.unit }}
+              </p>
+              <p class="text-gray-600">
+                <span class="font-medium">Assignment:</span> Common
+              </p>
             </div>
-          </div>
+
+            <template #actions>
+              <BaseButton
+                size="sm"
+                variant="secondary"
+                @click="$router.push(`/meters/${meter.id}`)"
+              >
+                Edit
+              </BaseButton>
+              <BaseButton
+                size="sm"
+                variant="danger"
+                @click="confirmDelete(meter)"
+              >
+                Delete
+              </BaseButton>
+            </template>
+          </DataCard>
         </div>
       </div>
 
       <!-- Unit Meters Section -->
       <div v-if="unitMeters.length > 0">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4">
+        <h2 class="section-title">
           Unit Meters
         </h2>
-        <div class="grid grid-cols-1 gap-4">
-          <div
+        <div class="card-grid">
+          <DataCard
             v-for="meter in unitMeters"
             :key="meter.id"
-            class="card hover:shadow-lg transition-shadow"
+            :title="meter.name"
           >
-            <div class="flex justify-between items-start">
-              <div>
-                <h3 class="text-lg font-semibold text-gray-800">
-                  {{ meter.name }}
-                </h3>
-                <p class="text-gray-600 mt-1">
-                  Type: {{ meter.meter_type }}
-                </p>
-                <p class="text-gray-600">
-                  Unit: {{ meter.unit }}
-                </p>
-                <p class="text-gray-600">
-                  Assignment: {{ getPropertyUnitName(meter.property_unit_id) }}
-                </p>
-              </div>
-              <div class="flex space-x-2">
-                <router-link
-                  :to="`/meters/${meter.id}`"
-                  class="btn btn-secondary"
-                >
-                  Edit
-                </router-link>
-                <button
-                  class="btn btn-danger"
-                  @click="confirmDelete(meter)"
-                >
-                  Delete
-                </button>
-              </div>
+            <div class="space-y-1">
+              <p class="text-gray-600">
+                <span class="font-medium">Type:</span> {{ meter.meter_type }}
+              </p>
+              <p class="text-gray-600">
+                <span class="font-medium">Unit:</span> {{ meter.unit }}
+              </p>
+              <p class="text-gray-600">
+                <span class="font-medium">Property Unit:</span> {{ getPropertyUnitName(meter.property_unit_id) }}
+              </p>
             </div>
-          </div>
+
+            <template #actions>
+              <BaseButton
+                size="sm"
+                variant="secondary"
+                @click="$router.push(`/meters/${meter.id}`)"
+              >
+                Edit
+              </BaseButton>
+              <BaseButton
+                size="sm"
+                variant="danger"
+                @click="confirmDelete(meter)"
+              >
+                Delete
+              </BaseButton>
+            </template>
+          </DataCard>
         </div>
       </div>
     </div>
 
-    <!-- Delete Confirmation Modal (simplified for MVP) -->
+    <!-- Delete Confirmation Modal -->
     <div
       v-if="showDeleteModal"
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
     >
-      <div class="bg-white rounded-lg p-6 max-w-md mx-auto">
+      <BaseCard class="max-w-md mx-4">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">
           Confirm Deletion
         </h3>
@@ -154,20 +142,20 @@
           This action cannot be undone.
         </p>
         <div class="flex justify-end space-x-3">
-          <button
-            class="btn btn-secondary"
+          <BaseButton
+            variant="secondary"
             @click="showDeleteModal = false"
           >
             Cancel
-          </button>
-          <button
-            class="btn btn-danger"
+          </BaseButton>
+          <BaseButton
+            variant="danger"
             @click="deleteMeter"
           >
             Delete
-          </button>
+          </BaseButton>
         </div>
-      </div>
+      </BaseCard>
     </div>
   </div>
 </template>
@@ -175,9 +163,27 @@
 <script>
 import { meterService, propertyUnitService } from '@/services/api';
 import { useToast } from 'vue-toastification';
+import {
+  PageHeader,
+  BaseButton,
+  BaseCard,
+  DataCard,
+  LoadingState,
+  AlertState,
+  EmptyState
+} from '@/components/base';
 
 export default {
   name: 'MeterList',
+  components: {
+    PageHeader,
+    BaseButton,
+    BaseCard,
+    DataCard,
+    LoadingState,
+    AlertState,
+    EmptyState
+  },
   setup() {
     const toast = useToast();
     return { toast };

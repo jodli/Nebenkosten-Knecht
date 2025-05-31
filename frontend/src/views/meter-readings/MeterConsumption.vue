@@ -1,152 +1,170 @@
 <template>
     <div>
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">
-                Consumption for {{ meter ? meter.name : 'Loading...' }}
-            </h1>
-            <div class="flex space-x-3">
-                <router-link :to="{ name: 'MeterReadingsByMeter', params: { meterId } }" class="btn btn-secondary">
+        <PageHeader :title="`Consumption for ${meter ? meter.name : 'Loading...'}`">
+            <template #actions>
+                <BaseButton
+                    @click="$router.push({ name: 'MeterReadingsByMeter', params: { meterId } })"
+                    variant="secondary"
+                >
                     View Readings
-                </router-link>
-                <router-link :to="{ name: 'MeterReadingCreate', query: { meterId } }" class="btn btn-primary">
+                </BaseButton>
+                <BaseButton
+                    @click="$router.push({ name: 'MeterReadingCreate', query: { meterId } })"
+                    variant="primary"
+                >
                     Add Reading
-                </router-link>
-            </div>
-        </div>
+                </BaseButton>
+            </template>
+        </PageHeader>
 
-        <div v-if="meter" class="card p-4 mb-6">
-            <div class="flex flex-col md:flex-row md:justify-between">
-                <div>
-                    <h2 class="text-lg font-semibold text-gray-800">
-                        {{ meter.name }}
-                    </h2>
+        <DataCard v-if="meter" :title="meter.name" class="mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-2">
                     <p class="text-gray-600">
-                        Type: {{ meter.meter_type }} | Unit: {{ meter.unit }}
+                        <span class="font-medium">Type:</span> {{ meter.meter_type }}
                     </p>
                     <p class="text-gray-600">
-                        Assignment: {{ meter.assignment_type === 'unit' ? 'Property Unit' : 'Common Area' }}
+                        <span class="font-medium">Unit:</span> {{ meter.unit }}
+                    </p>
+                    <p class="text-gray-600">
+                        <span class="font-medium">Assignment:</span>
+                        {{ meter.assignment_type === 'unit' ? 'Property Unit' : 'Common Area' }}
                         <span v-if="meter.assignment_type === 'unit' && propertyUnit">
                             ({{ propertyUnit.name }})
                         </span>
                     </p>
                 </div>
-                <div class="mt-3 md:mt-0">
-                    <div class="text-sm bg-blue-50 text-blue-700 px-3 py-2 rounded-lg" v-if="totalConsumption !== null">
-                        <p><strong>Total Consumption:</strong> {{ totalConsumption.toFixed(2) }} {{ meter.unit }}</p>
-                        <p><strong>Period:</strong> {{ consumptionPeriod }}</p>
+                <div v-if="totalConsumption !== null">
+                    <div class="bg-blue-50 text-blue-700 p-3 rounded-lg">
+                        <p class="font-medium">Total Consumption:</p>
+                        <p class="text-lg">{{ totalConsumption.toFixed(2) }} {{ meter.unit }}</p>
+                        <p class="text-sm">Period: {{ consumptionPeriod }}</p>
                     </div>
                 </div>
             </div>
-        </div>
+        </DataCard>
 
-        <div v-if="loading" class="text-center py-8">
-            <p class="text-gray-600">
-                Loading consumption data...
-            </p>
-        </div>
+        <LoadingState
+            v-if="loading"
+            message="Loading consumption data..."
+        />
 
-        <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            {{ error }}
-        </div>
+        <AlertState
+            v-else-if="error"
+            type="error"
+            :message="error"
+        />
 
-        <div v-else-if="readings.length < 2" class="card text-center py-8">
-            <p class="text-gray-600" v-if="readings.length === 0">
-                No readings found for this meter. At least two readings are required to calculate consumption.
-            </p>
-            <p class="text-gray-600" v-else>
-                Only one reading found. At least two readings are required to calculate consumption.
-            </p>
-            <div class="mt-4">
-                <router-link :to="{ name: 'MeterReadingCreate', query: { meterId } }" class="btn btn-primary">
+        <EmptyState
+            v-else-if="readings.length < 2"
+            title="Insufficient Data"
+            :message="readings.length === 0 ? 'No readings found for this meter. At least two readings are required to calculate consumption.' : 'Only one reading found. At least two readings are required to calculate consumption.'"
+        >
+            <template #actions>
+                <BaseButton
+                    @click="$router.push({ name: 'MeterReadingCreate', query: { meterId } })"
+                    variant="primary"
+                >
                     Add Reading
-                </router-link>
-            </div>
-        </div>
+                </BaseButton>
+            </template>
+        </EmptyState>
 
         <div v-else>
-            <div class="mb-4 flex flex-col md:flex-row md:items-center md:justify-between">
-                <h2 class="text-xl font-semibold text-gray-800 mb-2 md:mb-0">
-                    Consumption History
-                </h2>
-                <div class="flex flex-wrap gap-2">
-                    <button @click="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'" class="btn btn-outline">
-                        Sort: {{ sortOrder === 'asc' ? 'Oldest First' : 'Newest First' }}
-                    </button>
-                    <button @click="showDailyConsumption = !showDailyConsumption" class="btn btn-outline">
-                        {{ showDailyConsumption ? 'Show Total Consumption' : 'Show Daily Average' }}
-                    </button>
+            <BaseCard class="mb-6">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-2 md:mb-0">
+                        Consumption History
+                    </h2>
+                    <div class="flex flex-wrap gap-2">
+                        <BaseButton
+                            @click="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'"
+                            variant="outline"
+                        >
+                            Sort: {{ sortOrder === 'asc' ? 'Oldest First' : 'Newest First' }}
+                        </BaseButton>
+                        <BaseButton
+                            @click="showDailyConsumption = !showDailyConsumption"
+                            variant="outline"
+                        >
+                            {{ showDailyConsumption ? 'Show Total Consumption' : 'Show Daily Average' }}
+                        </BaseButton>
+                    </div>
                 </div>
-            </div>
 
-            <div class="card overflow-x-auto">
-                <table class="min-w-full bg-white">
-                    <thead>
-                        <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
-                            <th class="py-3 px-6 text-left">Reading Date</th>
-                            <th class="py-3 px-6 text-right">Meter Value</th>
-                            <th class="py-3 px-6 text-right">Consumption</th>
-                            <th class="py-3 px-6 text-center">Period</th>
-                            <th v-if="showDailyConsumption" class="py-3 px-6 text-right">Daily Average</th>
-                            <th class="py-3 px-6 text-left">Notes</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-gray-600 text-sm">
-                        <tr v-for="reading in sortedReadings" :key="reading.id"
-                            class="border-b border-gray-200 hover:bg-gray-50">
-                            <td class="py-3 px-6 text-left">
-                                {{ formatDate(reading.reading_date) }}
-                            </td>
-                            <td class="py-3 px-6 text-right">
-                                {{ reading.value.toFixed(2) }} {{ meter.unit }}
-                            </td>
-                            <td class="py-3 px-6 text-right">
-                                <span v-if="reading.consumption !== null"
-                                    :class="{ 'text-green-600 font-semibold': reading.consumption > 0 }">
-                                    {{ reading.consumption.toFixed(2) }} {{ meter.unit }}
-                                </span>
-                                <span v-else class="text-gray-400">-</span>
-                            </td>
-                            <td class="py-3 px-6 text-center">
-                                <span v-if="reading.days_since_last_reading !== null">
-                                    {{ reading.days_since_last_reading }} days
-                                </span>
-                                <span v-else class="text-gray-400">-</span>
-                            </td>
-                            <td v-if="showDailyConsumption" class="py-3 px-6 text-right">
-                                <span v-if="reading.consumption !== null && reading.days_since_last_reading > 0">
-                                    {{ (reading.consumption / reading.days_since_last_reading).toFixed(3) }} {{
-                                    meter.unit }}/day
-                                </span>
-                                <span v-else class="text-gray-400">-</span>
-                            </td>
-                            <td class="py-3 px-6 text-left">
-                                {{ reading.notes || '-' }}
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+                <BaseTable
+                    :columns="tableHeaders"
+                    :data="sortedReadings"
+                >
+                    <template #cell-reading_date="{ item }">
+                        {{ formatDate(item.reading_date) }}
+                    </template>
+                    <template #cell-value="{ item }">
+                        {{ item.value.toFixed(2) }} {{ meter.unit }}
+                    </template>
+                    <template #cell-consumption="{ item }">
+                        <span v-if="item.consumption !== null"
+                            :class="{ 'text-green-600 font-semibold': item.consumption > 0 }">
+                            {{ item.consumption.toFixed(2) }} {{ meter.unit }}
+                        </span>
+                        <span v-else class="text-gray-400">-</span>
+                    </template>
+                    <template #cell-period="{ item }">
+                        <span v-if="item.days_since_last_reading !== null">
+                            {{ item.days_since_last_reading }} days
+                        </span>
+                        <span v-else class="text-gray-400">-</span>
+                    </template>
+                    <template #cell-daily_average="{ item }">
+                        <span v-if="item.consumption !== null && item.days_since_last_reading > 0">
+                            {{ (item.consumption / item.days_since_last_reading).toFixed(3) }} {{ meter.unit }}/day
+                        </span>
+                        <span v-else class="text-gray-400">-</span>
+                    </template>
+                    <template #cell-notes="{ item }">
+                        {{ item.notes || '-' }}
+                    </template>
+                </BaseTable>
+            </BaseCard>
 
             <!-- Consumption Chart -->
-            <div class="mt-6">
+            <BaseCard>
                 <h2 class="text-xl font-semibold text-gray-800 mb-4">
                     Consumption Chart
                 </h2>
-                <div class="card p-4">
-                    <p class="text-center text-gray-500 italic">
-                        Chart feature will be implemented in a future update
-                    </p>
-                </div>
-            </div>
+                <p class="text-center text-gray-500 italic">
+                    Chart feature will be implemented in a future update
+                </p>
+            </BaseCard>
         </div>
     </div>
 </template>
 
 <script>
 import { meterReadingService, meterService, propertyUnitService } from '@/services/api';
+import {
+  PageHeader,
+  BaseButton,
+  BaseCard,
+  BaseTable,
+  DataCard,
+  LoadingState,
+  AlertState,
+  EmptyState
+} from '@/components/base';
 
 export default {
     name: 'MeterConsumption',
+    components: {
+        PageHeader,
+        BaseButton,
+        BaseCard,
+        BaseTable,
+        DataCard,
+        LoadingState,
+        AlertState,
+        EmptyState
+    },
 
     props: {
         meterId: {
@@ -168,6 +186,23 @@ export default {
     },
 
     computed: {
+        tableHeaders() {
+            const baseHeaders = [
+                { key: 'reading_date', label: 'Reading Date' },
+                { key: 'value', label: 'Meter Value' },
+                { key: 'consumption', label: 'Consumption' },
+                { key: 'period', label: 'Period' }
+            ];
+
+            if (this.showDailyConsumption) {
+                baseHeaders.push({ key: 'daily_average', label: 'Daily Average' });
+            }
+
+            baseHeaders.push({ key: 'notes', label: 'Notes' });
+
+            return baseHeaders;
+        },
+
         sortedReadings() {
             return [...this.readings].sort((a, b) => {
                 const dateA = new Date(a.reading_date);
@@ -256,25 +291,3 @@ export default {
     }
 };
 </script>
-
-<style scoped>
-.card {
-    @apply bg-white shadow rounded-lg p-4;
-}
-
-.btn {
-    @apply px-4 py-2 rounded-md text-sm font-medium;
-}
-
-.btn-primary {
-    @apply bg-blue-600 text-white hover:bg-blue-700;
-}
-
-.btn-secondary {
-    @apply bg-gray-200 text-gray-800 hover:bg-gray-300;
-}
-
-.btn-outline {
-    @apply border border-gray-300 text-gray-700 hover:bg-gray-50;
-}
-</style>

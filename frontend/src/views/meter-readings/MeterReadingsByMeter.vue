@@ -1,152 +1,175 @@
 <template>
     <div>
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">
-                Readings for {{ meter ? meter.name : 'Loading...' }}
-            </h1>
-            <div class="flex space-x-3">
-                <router-link :to="{ name: 'MeterConsumption', params: { meterId } }" class="btn btn-secondary">
+        <PageHeader :title="`Readings for ${meter ? meter.name : 'Loading...'}`">
+            <template #actions>
+                <BaseButton
+                    @click="$router.push({ name: 'MeterConsumption', params: { meterId } })"
+                    variant="secondary"
+                >
                     View Consumption
-                </router-link>
-                <router-link :to="{ name: 'MeterReadingCreate', query: { meterId } }" class="btn btn-primary">
+                </BaseButton>
+                <BaseButton
+                    @click="$router.push({ name: 'MeterReadingCreate', query: { meterId } })"
+                    variant="primary"
+                >
                     Add Reading
-                </router-link>
-            </div>
-        </div>
+                </BaseButton>
+            </template>
+        </PageHeader>
 
-        <div v-if="meter" class="card p-4 mb-6">
-            <div class="flex flex-col md:flex-row md:justify-between">
-                <div>
-                    <h2 class="text-lg font-semibold text-gray-800">
-                        {{ meter.name }}
-                    </h2>
+        <DataCard v-if="meter" :title="meter.name" class="mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-2">
                     <p class="text-gray-600">
-                        Type: {{ meter.meter_type }} | Unit: {{ meter.unit }}
+                        <span class="font-medium">Type:</span> {{ meter.meter_type }}
                     </p>
                     <p class="text-gray-600">
-                        Assignment: {{ meter.assignment_type === 'unit' ? 'Property Unit' : 'Common Area' }}
+                        <span class="font-medium">Unit:</span> {{ meter.unit }}
+                    </p>
+                    <p class="text-gray-600">
+                        <span class="font-medium">Assignment:</span>
+                        {{ meter.assignment_type === 'unit' ? 'Property Unit' : 'Common Area' }}
                         <span v-if="meter.assignment_type === 'unit' && propertyUnit">
                             ({{ propertyUnit.name }})
                         </span>
                     </p>
                 </div>
-                <div class="mt-3 md:mt-0">
-                    <div class="text-sm bg-blue-50 text-blue-700 px-3 py-2 rounded-lg">
-                        <p><strong>Latest Reading:</strong>
-                            <span v-if="latestReading">
-                                {{ latestReading.value.toFixed(2) }} {{ meter.unit }}
-                                on {{ formatDate(latestReading.reading_date) }}
-                            </span>
-                            <span v-else>No readings yet</span>
+                <div>
+                    <div class="bg-blue-50 text-blue-700 p-3 rounded-lg">
+                        <p class="font-medium">Latest Reading:</p>
+                        <p v-if="latestReading" class="text-lg">
+                            {{ latestReading.value.toFixed(2) }} {{ meter.unit }}
                         </p>
+                        <p v-if="latestReading" class="text-sm">
+                            on {{ formatDate(latestReading.reading_date) }}
+                        </p>
+                        <p v-else class="text-gray-500">No readings yet</p>
                     </div>
                 </div>
             </div>
-        </div>
+        </DataCard>
 
-        <div v-if="loading" class="text-center py-8">
-            <p class="text-gray-600">
-                Loading readings...
-            </p>
-        </div>
+        <LoadingState
+            v-if="loading"
+            message="Loading readings..."
+        />
 
-        <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            {{ error }}
-        </div>
+        <AlertState
+            v-else-if="error"
+            type="error"
+            :message="error"
+        />
 
-        <div v-else-if="readings.length === 0" class="card text-center py-8">
-            <p class="text-gray-600">
-                No readings found for this meter.
-            </p>
-            <div class="mt-4">
-                <router-link :to="{ name: 'MeterReadingCreate', query: { meterId } }" class="btn btn-primary">
+        <EmptyState
+            v-else-if="!readings.length"
+            title="No Readings Found"
+            message="No readings have been recorded for this meter yet."
+        >
+            <template #actions>
+                <BaseButton
+                    @click="$router.push({ name: 'MeterReadingCreate', query: { meterId } })"
+                    variant="primary"
+                >
                     Add First Reading
-                </router-link>
-            </div>
-        </div>
+                </BaseButton>
+            </template>
+        </EmptyState>
 
-        <div v-else>
-            <div class="mb-4 flex items-center justify-between">
-                <h2 class="text-xl font-semibold text-gray-800">
-                    Reading History
-                </h2>
-                <div class="flex space-x-2">
-                    <button @click="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'" class="btn btn-outline">
-                        Sort: {{ sortOrder === 'asc' ? 'Oldest First' : 'Newest First' }}
-                    </button>
-                </div>
-            </div>
+        <BaseTable
+            v-else
+            :columns="tableColumns"
+            :data="readings"
+            class="mt-6"
+        >
+            <template #cell-reading_date="{ item }">
+                {{ formatDate(item.reading_date) }}
+            </template>
+            <template #cell-value="{ item }">
+                {{ item.value.toFixed(2) }} {{ meter.unit }}
+            </template>
+            <template #cell-consumption="{ item, index }">
+                <span v-if="index < readings.length - 1">
+                    {{ (item.value - readings[index + 1].value).toFixed(2) }} {{ meter.unit }}
+                </span>
+                <span v-else class="text-gray-500">-</span>
+            </template>
+            <template #cell-notes="{ item }">
+                {{ item.notes || '-' }}
+            </template>
+            <template #actions="{ item }">
+                <BaseButton
+                    @click="handleTableAction('edit', item)"
+                    variant="secondary"
+                    size="sm"
+                    class="text-xs"
+                >
+                    Edit
+                </BaseButton>
+                <BaseButton
+                    @click="handleTableAction('delete', item)"
+                    variant="danger"
+                    size="sm"
+                    class="text-xs"
+                >
+                    Delete
+                </BaseButton>
+            </template>
+        </BaseTable>
 
-            <div class="card overflow-x-auto">
-                <table class="min-w-full bg-white">
-                    <thead>
-                        <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
-                            <th class="py-3 px-6 text-left">Reading Date</th>
-                            <th class="py-3 px-6 text-right">Reading Value</th>
-                            <th class="py-3 px-6 text-left">Notes</th>
-                            <th class="py-3 px-6 text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-gray-600 text-sm">
-                        <tr v-for="reading in sortedReadings" :key="reading.id"
-                            class="border-b border-gray-200 hover:bg-gray-50">
-                            <td class="py-3 px-6 text-left">
-                                {{ formatDate(reading.reading_date) }}
-                            </td>
-                            <td class="py-3 px-6 text-right">
-                                {{ reading.value.toFixed(2) }} {{ meter.unit }}
-                            </td>
-                            <td class="py-3 px-6 text-left">
-                                {{ reading.notes || '-' }}
-                            </td>
-                            <td class="py-3 px-6 text-center">
-                                <div class="flex item-center justify-center space-x-2">
-                                    <router-link :to="`/meter-readings/${reading.id}`"
-                                        class="text-blue-500 hover:text-blue-700">
-                                        Edit
-                                    </router-link>
-                                    <button @click="confirmDelete(reading)" class="text-red-500 hover:text-red-700">
-                                        Delete
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Confirmation Dialog -->
-        <div v-if="showConfirmation" class="fixed inset-0 flex items-center justify-center z-50">
-            <div class="fixed inset-0 bg-black opacity-50"></div>
-            <div class="bg-white p-6 rounded-lg shadow-lg z-10 max-w-md mx-auto">
-                <h3 class="text-lg font-semibold mb-4">
+        <!-- Delete Confirmation Modal -->
+        <div v-if="showDeleteModal" class="modal-overlay">
+            <BaseCard class="max-w-md mx-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
                     Confirm Deletion
                 </h3>
-                <p>
-                    Are you sure you want to delete the meter reading from
-                    <span class="font-semibold">{{ selectedReading ? formatDate(selectedReading.reading_date) : ''
-                        }}</span>?
-                    This action cannot be undone.
+                <p class="text-gray-600 mb-6">
+                    Are you sure you want to delete this meter reading? This action cannot be undone.
                 </p>
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button @click="showConfirmation = false" class="btn btn-secondary">
+                <div class="flex justify-end space-x-3">
+                    <BaseButton
+                        variant="secondary"
+                        @click="showDeleteModal = false"
+                    >
                         Cancel
-                    </button>
-                    <button @click="deleteReading" class="btn btn-danger">
-                        Delete
-                    </button>
+                    </BaseButton>
+                    <BaseButton
+                        variant="danger"
+                        @click="deleteMeterReading"
+                        :disabled="deleting"
+                    >
+                        {{ deleting ? 'Deleting...' : 'Delete' }}
+                    </BaseButton>
                 </div>
-            </div>
+            </BaseCard>
         </div>
     </div>
 </template>
 
 <script>
 import { meterReadingService, meterService, propertyUnitService } from '@/services/api';
+import {
+  PageHeader,
+  BaseButton,
+  BaseCard,
+  BaseTable,
+  DataCard,
+  LoadingState,
+  AlertState,
+  EmptyState
+} from '@/components/base';
 
 export default {
     name: 'MeterReadingsByMeter',
+    components: {
+        PageHeader,
+        BaseButton,
+        BaseCard,
+        BaseTable,
+        DataCard,
+        LoadingState,
+        AlertState,
+        EmptyState
+    },
 
     props: {
         meterId: {
@@ -162,23 +185,19 @@ export default {
             readings: [],
             loading: true,
             error: null,
-            showConfirmation: false,
-            selectedReading: null,
-            sortOrder: 'desc' // Default to newest first
+            showDeleteModal: false,
+            readingToDelete: null,
+            deleting: false,
+            tableColumns: [
+                { key: 'reading_date', label: 'Date', align: 'left', width: '20%' },
+                { key: 'value', label: 'Value', align: 'right', width: '16%' },
+                { key: 'consumption', label: 'Consumption', align: 'right', width: '20%' },
+                { key: 'notes', label: 'Notes', align: 'left', width: '28%' }
+            ]
         };
     },
 
     computed: {
-        sortedReadings() {
-            return [...this.readings].sort((a, b) => {
-                const dateA = new Date(a.reading_date);
-                const dateB = new Date(b.reading_date);
-                return this.sortOrder === 'asc'
-                    ? dateA - dateB
-                    : dateB - dateA;
-            });
-        },
-
         latestReading() {
             if (this.readings.length === 0) return null;
 
@@ -191,6 +210,16 @@ export default {
     },
 
     methods: {
+        handleTableAction(action, item) {
+            switch (action) {
+                case 'edit':
+                    this.$router.push(`/meter-readings/${item.id}`);
+                    break;
+                case 'delete':
+                    this.confirmDelete(item);
+                    break;
+            }
+        },
         async fetchMeter() {
             try {
                 const response = await meterService.get(this.meterId);
@@ -218,7 +247,10 @@ export default {
         async fetchReadings() {
             try {
                 const response = await meterReadingService.getByMeter(this.meterId);
-                this.readings = response.data;
+                // Sort readings by date (newest first) for proper consumption calculation
+                this.readings = response.data.sort((a, b) =>
+                    new Date(b.reading_date) - new Date(a.reading_date)
+                );
                 this.error = null;
             } catch (err) {
                 console.error('Error fetching meter readings:', err);
@@ -233,19 +265,24 @@ export default {
         },
 
         confirmDelete(reading) {
-            this.selectedReading = reading;
-            this.showConfirmation = true;
+            this.readingToDelete = reading;
+            this.showDeleteModal = true;
         },
 
-        async deleteReading() {
+        async deleteMeterReading() {
+            if (!this.readingToDelete) return;
+
+            this.deleting = true;
             try {
-                await meterReadingService.delete(this.selectedReading.id);
-                this.readings = this.readings.filter(r => r.id !== this.selectedReading.id);
-                this.showConfirmation = false;
-                this.selectedReading = null;
+                await meterReadingService.delete(this.readingToDelete.id);
+                this.readings = this.readings.filter(r => r.id !== this.readingToDelete.id);
+                this.showDeleteModal = false;
+                this.readingToDelete = null;
             } catch (err) {
                 console.error('Error deleting meter reading:', err);
                 this.error = 'Failed to delete meter reading. Please try again.';
+            } finally {
+                this.deleting = false;
             }
         }
     },
@@ -258,27 +295,16 @@ export default {
 </script>
 
 <style scoped>
-.card {
-    @apply bg-white shadow rounded-lg p-4;
-}
-
-.btn {
-    @apply px-4 py-2 rounded-md text-sm font-medium;
-}
-
-.btn-primary {
-    @apply bg-blue-600 text-white hover:bg-blue-700;
-}
-
-.btn-secondary {
-    @apply bg-gray-200 text-gray-800 hover:bg-gray-300;
-}
-
-.btn-danger {
-    @apply bg-red-600 text-white hover:bg-red-700;
-}
-
-.btn-outline {
-    @apply border border-gray-300 text-gray-700 hover:bg-gray-50;
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
 }
 </style>

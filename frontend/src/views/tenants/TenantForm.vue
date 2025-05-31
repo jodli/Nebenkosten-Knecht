@@ -1,10 +1,8 @@
 <template>
   <div>
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">
-      {{ isEditing ? 'Edit Tenant' : 'Create Tenant' }}
-    </h1>
+    <PageHeader :title="isEditing ? 'Edit Tenant' : 'Create Tenant'" />
 
-    <div class="card max-w-2xl mx-auto">
+    <BaseCard size="lg" class="max-w-2xl mx-auto">
       <form @submit.prevent="submitForm">
         <div class="mb-4">
           <label
@@ -16,12 +14,12 @@
             v-model="form.name"
             type="text"
             class="form-input"
-            :class="{ 'border-red-500': errors.name }"
+            :class="{ 'form-input-error': errors.name }"
             required
           >
           <p
             v-if="errors.name"
-            class="mt-1 text-sm text-red-600"
+            class="form-error"
           >
             {{ errors.name }}
           </p>
@@ -39,12 +37,12 @@
             min="1"
             step="1"
             class="form-input"
-            :class="{ 'border-red-500': errors.number_of_persons }"
+            :class="{ 'form-input-error': errors.number_of_persons }"
             required
           >
           <p
             v-if="errors.number_of_persons"
-            class="mt-1 text-sm text-red-600"
+            class="form-error"
           >
             {{ errors.number_of_persons }}
           </p>
@@ -98,31 +96,39 @@
         </div>
 
         <div class="flex justify-between">
-          <router-link
-            to="/tenants"
-            class="btn btn-secondary"
+          <BaseButton
+            variant="secondary"
+            @click="$router.push('/tenants')"
           >
             Cancel
-          </router-link>
-          <button
+          </BaseButton>
+          <BaseButton
             type="submit"
-            class="btn btn-primary"
+            variant="primary"
             :disabled="loading || propertyUnits.length === 0"
           >
             {{ isEditing ? 'Update' : 'Create' }}
-          </button>
+          </BaseButton>
         </div>
       </form>
-    </div>
+    </BaseCard>
   </div>
 </template>
 
 <script>
 import { tenantService, propertyUnitService } from '@/services/api';
+import PageHeader from '@/components/base/PageHeader.vue';
+import BaseCard from '@/components/base/BaseCard.vue';
+import BaseButton from '@/components/base/BaseButton.vue';
 import { useToast } from 'vue-toastification';
 
 export default {
   name: 'TenantForm',
+  components: {
+    PageHeader,
+    BaseCard,
+    BaseButton
+  },
   props: {
     id: {
       type: String,

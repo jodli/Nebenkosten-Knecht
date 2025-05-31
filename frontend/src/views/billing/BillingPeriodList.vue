@@ -1,176 +1,173 @@
 <template>
-  <div class="container mx-auto px-4 py-8">
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold">Billing Periods</h1>
-      <button
-        @click="openCreateForm"
-        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-      >
-        Add New Period
-      </button>
-    </div>
+  <div>
+    <PageHeader title="Billing Periods">
+      <template #actions>
+        <BaseButton
+          @click="openCreateForm"
+          variant="primary"
+        >
+          Add New Period
+        </BaseButton>
+      </template>
+    </PageHeader>
 
-    <!-- Loading State -->
-    <div v-if="loading" class="text-center py-8">
-      <div class="spinner"></div>
-      <p class="mt-2">Loading billing periods...</p>
-    </div>
+    <LoadingState
+      v-if="loading"
+      message="Loading billing periods..."
+    />
 
-    <!-- Error State -->
-    <div v-else-if="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-      <p>{{ error }}</p>
-    </div>
+    <AlertState
+      v-else-if="error"
+      type="error"
+      :message="error"
+    />
 
-    <!-- Empty State -->
-    <div v-else-if="billingPeriods.length === 0" class="text-center py-8">
-      <p class="text-gray-500">No billing periods found. Create your first billing period to get started.</p>
-    </div>
+    <EmptyState
+      v-else-if="billingPeriods.length === 0"
+      title="No Billing Periods Found"
+      message="Create your first billing period to get started."
+    >
+      <template #actions>
+        <BaseButton
+          @click="openCreateForm"
+          variant="primary"
+        >
+          Add New Period
+        </BaseButton>
+      </template>
+    </EmptyState>
 
-    <!-- Billing Periods List -->
-    <div v-else class="overflow-x-auto">
-      <table class="min-w-full bg-white">
-        <thead>
-          <tr>
-            <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left">Name</th>
-            <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left">Property Unit</th>
-            <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left">Start Date</th>
-            <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left">End Date</th>
-            <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="period in billingPeriods" :key="period.id" class="hover:bg-gray-100">
-            <td class="py-2 px-4 border-b border-gray-200">{{ period.name }}</td>
-            <td class="py-2 px-4 border-b border-gray-200">
-              {{ getPropertyUnitName(period.property_unit_id) }}
-            </td>
-            <td class="py-2 px-4 border-b border-gray-200">{{ formatDate(period.start_date) }}</td>
-            <td class="py-2 px-4 border-b border-gray-200">{{ formatDate(period.end_date) }}</td>
-            <td class="py-2 px-4 border-b border-gray-200">
-              <div class="flex space-x-2">
-                <button
-                  @click="openEditForm(period)"
-                  class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-sm"
-                >
-                  Edit
-                </button>
-                <button
-                  @click="openDeleteConfirmation(period)"
-                  class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-sm"
-                >
-                  Delete
-                </button>
-                <button
-                  @click="goToStatements(period)"
-                  class="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded text-sm"
-                >
-                  Statements
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <BaseTable
+      v-else
+      :columns="tableHeaders"
+      :data="billingPeriods"
+      :actions="tableActions"
+      @action="handleTableAction"
+    >
+      <template #cell-name="{ item }">
+        {{ item.name }}
+      </template>
+      <template #cell-property_unit="{ item }">
+        {{ getPropertyUnitName(item.property_unit_id) }}
+      </template>
+      <template #cell-start_date="{ item }">
+        {{ formatDate(item.start_date) }}
+      </template>
+      <template #cell-end_date="{ item }">
+        {{ formatDate(item.end_date) }}
+      </template>
+    </BaseTable>
 
     <!-- Form Dialog -->
-    <div v-if="showForm" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-        <h2 class="text-xl font-bold mb-4">{{ isEditing ? 'Edit' : 'Create' }} Billing Period</h2>
+    <div v-if="showForm" class="modal-overlay">
+      <BaseCard class="max-w-md mx-4">
+        <h2 class="text-xl font-semibold text-gray-800 mb-6">
+          {{ isEditing ? 'Edit' : 'Create' }} Billing Period
+        </h2>
 
-        <div class="mb-4">
-          <label class="block text-gray-700 text-sm font-bold mb-2" for="name">Name</label>
-          <input
-            v-model="formData.name"
-            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            id="name"
-            type="text"
-            placeholder="e.g. 2024 Annual Billing"
+        <form @submit.prevent="saveBillingPeriod" class="space-y-4">
+          <div>
+            <label class="form-label" for="name">Name</label>
+            <input
+              v-model="formData.name"
+              class="form-input"
+              id="name"
+              type="text"
+              placeholder="e.g. 2024 Annual Billing"
+              required
+            />
+          </div>
+
+          <div>
+            <label class="form-label" for="property_unit">Property Unit</label>
+            <select
+              v-model="formData.property_unit_id"
+              class="form-input"
+              id="property_unit"
+              required
+            >
+              <option value="" disabled>Select a property unit</option>
+              <option v-for="unit in propertyUnits" :key="unit.id" :value="unit.id">
+                {{ unit.name }}
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label class="form-label" for="start_date">Start Date</label>
+            <input
+              v-model="formData.start_date"
+              class="form-input"
+              id="start_date"
+              type="date"
+              required
+            />
+          </div>
+
+          <div>
+            <label class="form-label" for="end_date">End Date</label>
+            <input
+              v-model="formData.end_date"
+              class="form-input"
+              id="end_date"
+              type="date"
+              required
+            />
+          </div>
+
+          <AlertState
+            v-if="formError"
+            type="error"
+            :message="formError"
           />
-        </div>
 
-        <div class="mb-4">
-          <label class="block text-gray-700 text-sm font-bold mb-2" for="property_unit">Property Unit</label>
-          <select
-            v-model="formData.property_unit_id"
-            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            id="property_unit"
-          >
-            <option value="" disabled>Select a property unit</option>
-            <option v-for="unit in propertyUnits" :key="unit.id" :value="unit.id">
-              {{ unit.name }}
-            </option>
-          </select>
-        </div>
-
-        <div class="mb-4">
-          <label class="block text-gray-700 text-sm font-bold mb-2" for="start_date">Start Date</label>
-          <input
-            v-model="formData.start_date"
-            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            id="start_date"
-            type="date"
-          />
-        </div>
-
-        <div class="mb-4">
-          <label class="block text-gray-700 text-sm font-bold mb-2" for="end_date">End Date</label>
-          <input
-            v-model="formData.end_date"
-            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            id="end_date"
-            type="date"
-          />
-        </div>
-
-        <!-- Validation Error -->
-        <div v-if="formError" class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          <p>{{ formError }}</p>
-        </div>
-
-        <div class="flex justify-end space-x-2">
-          <button
-            @click="closeForm"
-            class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
-          >
-            Cancel
-          </button>
-          <button
-            @click="saveBillingPeriod"
-            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-            :disabled="saving"
-          >
-            {{ saving ? 'Saving...' : 'Save' }}
-          </button>
-        </div>
-      </div>
+          <div class="flex justify-end space-x-3 pt-4">
+            <BaseButton
+              type="button"
+              variant="secondary"
+              @click="closeForm"
+            >
+              Cancel
+            </BaseButton>
+            <BaseButton
+              type="submit"
+              variant="primary"
+              :disabled="saving"
+            >
+              {{ saving ? 'Saving...' : 'Save' }}
+            </BaseButton>
+          </div>
+        </form>
+      </BaseCard>
     </div>
 
     <!-- Delete Confirmation Dialog -->
-    <div v-if="showDeleteConfirmation" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-        <h2 class="text-xl font-bold mb-4">Confirm Delete</h2>
-        <p class="mb-4">
-          Are you sure you want to delete the billing period "{{ periodToDelete.name }}"?
+    <div v-if="showDeleteConfirmation" class="modal-overlay">
+      <BaseCard class="max-w-md mx-4">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+          Confirm Delete
+        </h3>
+        <p class="text-gray-600 mb-6">
+          Are you sure you want to delete the billing period "{{ periodToDelete?.name }}"?
           This will delete all statements associated with this period.
         </p>
 
-        <div class="flex justify-end space-x-2">
-          <button
+        <div class="flex justify-end space-x-3">
+          <BaseButton
+            variant="secondary"
             @click="showDeleteConfirmation = false"
-            class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
           >
             Cancel
-          </button>
-          <button
+          </BaseButton>
+          <BaseButton
+            variant="danger"
             @click="deleteBillingPeriod"
-            class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
             :disabled="deleting"
           >
             {{ deleting ? 'Deleting...' : 'Delete' }}
-          </button>
+          </BaseButton>
         </div>
-      </div>
+      </BaseCard>
     </div>
   </div>
 </template>
@@ -178,9 +175,27 @@
 <script>
 import billingService from '@/services/billingService';
 import { propertyUnitService } from '@/services/api';
+import {
+  PageHeader,
+  BaseButton,
+  BaseCard,
+  BaseTable,
+  LoadingState,
+  AlertState,
+  EmptyState
+} from '@/components/base';
 
 export default {
   name: 'BillingPeriodList',
+  components: {
+    PageHeader,
+    BaseButton,
+    BaseCard,
+    BaseTable,
+    LoadingState,
+    AlertState,
+    EmptyState
+  },
   data() {
     return {
       billingPeriods: [],
@@ -199,7 +214,18 @@ export default {
       saving: false,
       showDeleteConfirmation: false,
       periodToDelete: null,
-      deleting: false
+      deleting: false,
+      tableHeaders: [
+        { key: 'name', label: 'Name' },
+        { key: 'property_unit', label: 'Property Unit' },
+        { key: 'start_date', label: 'Start Date' },
+        { key: 'end_date', label: 'End Date' }
+      ],
+      tableActions: [
+        { key: 'edit', label: 'Edit', variant: 'secondary' },
+        { key: 'statements', label: 'Statements', variant: 'primary' },
+        { key: 'delete', label: 'Delete', variant: 'danger' }
+      ]
     };
   },
   created() {
@@ -234,6 +260,20 @@ export default {
     formatDate(dateString) {
       const date = new Date(dateString);
       return date.toLocaleDateString();
+    },
+
+    handleTableAction(action, item) {
+      switch (action) {
+        case 'edit':
+          this.openEditForm(item);
+          break;
+        case 'delete':
+          this.openDeleteConfirmation(item);
+          break;
+        case 'statements':
+          this.goToStatements(item);
+          break;
+      }
     },
 
     openCreateForm() {

@@ -1,29 +1,32 @@
 <template>
     <div>
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">
-                {{ isEdit ? 'Edit Meter Reading' : 'Add Meter Reading' }}
-            </h1>
-            <router-link to="/meter-readings" class="btn btn-secondary">
-                Back to Readings
-            </router-link>
-        </div>
+        <PageHeader :title="isEdit ? 'Edit Meter Reading' : 'Add Meter Reading'">
+            <template #actions>
+                <BaseButton
+                    @click="$router.push('/meter-readings')"
+                    variant="secondary"
+                >
+                    Back to Readings
+                </BaseButton>
+            </template>
+        </PageHeader>
 
-        <div v-if="loading" class="text-center py-8">
-            <p class="text-gray-600">
-                Loading...
-            </p>
-        </div>
+        <LoadingState
+            v-if="loading"
+            message="Loading..."
+        />
 
-        <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
-            {{ error }}
-        </div>
+        <AlertState
+            v-else-if="error"
+            type="error"
+            :message="error"
+        />
 
-        <div v-else class="card">
-            <form @submit.prevent="submitForm">
-                <div class="mb-4">
-                    <label for="meter" class="block text-sm font-medium text-gray-700">Meter</label>
-                    <select id="meter" v-model="formData.meter_id" class="form-select" required>
+        <BaseCard v-else>
+            <form @submit.prevent="submitForm" class="space-y-6">
+                <div>
+                    <label for="meter" class="form-label">Meter</label>
+                    <select id="meter" v-model="formData.meter_id" class="form-input" required>
                         <option value="" disabled>Select a meter</option>
                         <option v-for="meter in meters" :key="meter.id" :value="meter.id">
                             {{ meter.name }} ({{ meter.meter_type }}, {{ meter.unit }})
@@ -31,18 +34,31 @@
                     </select>
                 </div>
 
-                <div class="mb-4">
-                    <label for="reading_date" class="block text-sm font-medium text-gray-700">Reading Date</label>
-                    <input id="reading_date" v-model="formData.reading_date" type="date" class="form-input" :max="today"
-                        required />
+                <div>
+                    <label for="reading_date" class="form-label">Reading Date</label>
+                    <input
+                        id="reading_date"
+                        v-model="formData.reading_date"
+                        type="date"
+                        class="form-input"
+                        :max="today"
+                        required
+                    />
                 </div>
 
-                <div class="mb-4">
-                    <label for="value" class="block text-sm font-medium text-gray-700">Reading Value</label>
-                    <div class="flex items-center">
-                        <input id="value" v-model.number="formData.value" type="number" min="0" step="0.01"
-                            class="form-input" required />
-                        <span v-if="selectedMeter" class="ml-2 text-gray-500">
+                <div>
+                    <label for="value" class="form-label">Reading Value</label>
+                    <div class="flex items-center space-x-2">
+                        <input
+                            id="value"
+                            v-model.number="formData.value"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            class="form-input flex-1"
+                            required
+                        />
+                        <span v-if="selectedMeter" class="text-gray-500 text-sm">
                             {{ selectedMeter.unit }}
                         </span>
                     </div>
@@ -53,30 +69,56 @@
                     </p>
                 </div>
 
-                <div class="mb-4">
-                    <label for="notes" class="block text-sm font-medium text-gray-700">Notes</label>
-                    <textarea id="notes" v-model="formData.notes" class="form-textarea" rows="3"
-                        placeholder="Optional notes about this reading"></textarea>
+                <div>
+                    <label for="notes" class="form-label">Notes</label>
+                    <textarea
+                        id="notes"
+                        v-model="formData.notes"
+                        class="form-input h-24"
+                        placeholder="Optional notes about this reading"
+                    ></textarea>
                 </div>
 
                 <div class="flex justify-end space-x-3">
-                    <router-link to="/meter-readings" class="btn btn-secondary">
+                    <BaseButton
+                        type="button"
+                        variant="secondary"
+                        @click="$router.push('/meter-readings')"
+                    >
                         Cancel
-                    </router-link>
-                    <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
+                    </BaseButton>
+                    <BaseButton
+                        type="submit"
+                        variant="primary"
+                        :disabled="isSubmitting"
+                    >
                         {{ isSubmitting ? 'Saving...' : 'Save Reading' }}
-                    </button>
+                    </BaseButton>
                 </div>
             </form>
-        </div>
+        </BaseCard>
     </div>
 </template>
 
 <script>
 import { meterService, meterReadingService } from '@/services/api';
+import {
+  PageHeader,
+  BaseButton,
+  BaseCard,
+  LoadingState,
+  AlertState
+} from '@/components/base';
 
 export default {
     name: 'MeterReadingForm',
+    components: {
+        PageHeader,
+        BaseButton,
+        BaseCard,
+        LoadingState,
+        AlertState
+    },
 
     props: {
         id: {
